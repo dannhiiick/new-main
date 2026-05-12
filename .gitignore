@@ -1,3 +1,11 @@
 venv/
 __pycache__/
 *.pyc
+
+# Local media files are served from disk in development.
+*.mp3
+*.wav
+*.flac
+*.aac
+*.m4a
+*.ogg
