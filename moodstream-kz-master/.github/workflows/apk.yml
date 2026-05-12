@@ -1,0 +1,141 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    name: Android APK (release)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install mobile deps
+        working-directory: mobile
+        run: npm ci
+
+      - name: Create .env for bundler
+        working-directory: mobile
+        run: echo "EXPO_PUBLIC_API_URL=https://moodspot-kz.onrender.com" > .env
+
+      - name: Expo prebuild (Android)
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://moodspot-kz.onrender.com
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > mobile/android/app/moodstream-release.keystore
+
+      - name: Patch build.gradle for release signing
+        working-directory: mobile/android/app
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          python3 - << 'PY'
+          import os, re
+
+          store_pw = os.environ['STORE_PASSWORD']
+          key_alias = os.environ['KEY_ALIAS']
+          key_pw = os.environ['KEY_PASSWORD']
+
+          with open('build.gradle', 'r') as f:
+              content = f.read()
+
+          # Replace the entire signingConfigs block
+          old_block = re.search(r'signingConfigs \{.*?\n    \}', content, re.DOTALL).group(0)
+          new_block = f'''signingConfigs {{
+              debug {{
+                  storeFile file('debug.keystore')
+                  storePassword 'android'
+                  keyAlias 'androiddebugkey'
+                  keyPassword 'android'
+              }}
+              release {{
+                  storeFile file("moodstream-release.keystore")
+                  storePassword '{store_pw}'
+                  keyAlias '{key_alias}'
+                  keyPassword '{key_pw}'
+              }}
+          }}'''
+          content = content.replace(old_block, new_block)
+
+          # Use release signingConfig in buildTypes.release
+          content = re.sub(
+              r'(buildTypes \{.*?release \{.*?)signingConfig signingConfigs\.debug',
+              r'\1signingConfig signingConfigs.release',
+              content, flags=re.DOTALL, count=1
+          )
+
+          with open('build.gradle', 'w') as f:
+              f.write(content)
+
+          print("Patched successfully")
+          print("Signing config:")
+          m = re.search(r'release \{[^}]*storePassword[^}]*\}', content, re.DOTALL)
+          if m:
+              print(m.group(0)[:200])
+          PY
+
+      - name: Verify keystore is readable
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          echo "Keystore size: $(wc -c < mobile/android/app/moodstream-release.keystore) bytes"
+          keytool -list -keystore mobile/android/app/moodstream-release.keystore \
+            -alias "$KEY_ALIAS" \
+            -storepass "$STORE_PASSWORD" \
+            -v 2>&1 | grep -E "Alias|SHA256|Error|Exception" || true
+
+      - name: Add network security config
+        run: |
+          mkdir -p mobile/android/app/src/main/res/xml
+          cat > mobile/android/app/src/main/res/xml/network_security_config.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <network-security-config>
+              <base-config cleartextTrafficPermitted="false">
+                  <trust-anchors><certificates src="system"/></trust-anchors>
+              </base-config>
+              <domain-config cleartextTrafficPermitted="true">
+                  <domain includeSubdomains="true">localhost</domain>
+              </domain-config>
+              <domain-config cleartextTrafficPermitted="false">
+                  <domain includeSubdomains="true">moodspot-kz.onrender.com</domain>
+                  <trust-anchors><certificates src="system"/></trust-anchors>
+              </domain-config>
+          </network-security-config>
+          EOF
+          sed -i 's/android:dataExtractionRules="@xml\/secure_store_data_extraction_rules"/android:dataExtractionRules="@xml\/secure_store_data_extraction_rules" android:networkSecurityConfig="@xml\/network_security_config"/' mobile/android/app/src/main/AndroidManifest.xml
+
+      - name: Make gradlew executable
+        working-directory: mobile/android
+        run: chmod +x gradlew
+
+      - name: Build release APK
+        working-directory: mobile/android
+        env:
+          EXPO_PUBLIC_API_URL: https://moodspot-kz.onrender.com
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: moodstream-kz-release
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30

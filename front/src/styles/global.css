@@ -1,0 +1,66 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #1d4ed8;
+  --primary-dark: #c2185b;
+  --secondary: #0f766e;
+  --tertiary: #f59e0b;
+  --accent: #ffbe0b;
+  --dark-bg: #0a0e27;
+  --darker-bg: #050810;
+  --card-bg: #1a1f3a;
+  --border-color: #2a2f4a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b5c8;
+  --success: #00d97e;
+  --warning: #ff8c42;
+  --danger: #dc2626;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  letter-spacing: -0.5px;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--darker-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--tertiary) 0%, var(--secondary) 100%);
+}
+
+/* Selection */
+::selection {
+  background: var(--primary);
+  color: var(--text-primary);
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
+}

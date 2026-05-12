@@ -1,0 +1,751 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  LISTENER
+  ADMIN
+  CATALOG_MANAGER
+}
+
+enum AuthProvider {
+  PHONE_OTP
+  EMAIL_MAGIC_LINK
+  APPLE
+  GOOGLE
+}
+
+enum LocaleCode {
+  kk
+  ru
+  en
+}
+
+enum TerritoryCode {
+  KZ
+  KG
+  UZ
+  AZ
+  TJ
+  TM
+  GLOBAL
+}
+
+enum ArtistType {
+  SOLO
+  DUO
+  BAND
+  DJ
+  COLLECTIVE
+}
+
+enum ReleaseType {
+  SINGLE
+  EP
+  ALBUM
+  COMPILATION
+  LIVE
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  UPCOMING
+  UNAVAILABLE
+  TAKEDOWN
+  GEO_BLOCKED
+  RIGHTS_HOLD
+}
+
+enum PlaybackStatus {
+  PLAYABLE
+  PROCESSING
+  BLOCKED
+  REMOVED
+}
+
+enum PlaylistVisibility {
+  PRIVATE
+  PUBLIC
+  UNLISTED
+}
+
+enum RecommendationFeedbackKind {
+  LIKE
+  DISLIKE
+  SKIP
+  HIDE_TRACK
+  HIDE_ARTIST
+  SAVE
+  UNSAVE
+  ADD_TO_PLAYLIST
+}
+
+enum IngestionSourceType {
+  LABEL_FEED
+  MANUAL_ADMIN
+  DISTRIBUTOR_API
+  LEGACY_IMPORT
+}
+
+enum IngestionBatchStatus {
+  RECEIVED
+  VALIDATING
+  IMPORTED
+  FAILED
+}
+
+enum LibraryEntityType {
+  TRACK
+  RELEASE
+  PLAYLIST
+}
+
+enum CatalogSourcePolicy {
+  CURATED
+  PROMOTED_IMPORT
+  HIDDEN_IMPORT
+  INTERNAL_ONLY
+}
+
+// ─── User & Auth ──────────────────────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  phone             String?   @unique
+  email             String?   @unique
+  displayName       String
+  avatarUrl         String?
+  role              UserRole  @default(LISTENER)
+  isBanned          Boolean   @default(false)
+  preferredLocale   LocaleCode @default(ru)
+  lastRoleChangeAt  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  authAccounts     AuthAccount[]
+  emailCredential  EmailCredential?
+  devices          UserDevice[]
+  libraryItems     LibraryItem[]
+  playlists        Playlist[]
+  playHistory      PlayEvent[]
+  recFeedback           RecommendationFeedback[]
+  auditLogs             AuditLog[]
+  recommendationProfile UserRecommendationProfile?
+  recommendationReasons RecommendationReason[]
+  testSessions          TestSession[]
+  appFeedback           AppFeedback[]
+  friendshipsRequested  Friendship[]  @relation("FriendshipRequester")
+  friendshipsReceived   Friendship[]  @relation("FriendshipAddressee")
+  artistFollows         ArtistFollow[]
+  publicProfile         PublicProfile?
+  cloneSessions         CloneSession[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model AuthAccount {
+  id         String       @id @default(cuid())
+  userId     String
+  provider   AuthProvider
+  providerId String
+  createdAt  DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("auth_accounts")
+}
+
+model OtpCode {
+  id         String   @id @default(cuid())
+  phone      String
+  code       String
+  attempts   Int      @default(0)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([phone, expiresAt])
+  @@map("otp_codes")
+}
+
+model EmailCredential {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  email          String    @unique
+  passwordHash   String
+  resetToken     String?   @unique
+  resetExpiresAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_credentials")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  deviceId  String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model UserDevice {
+  id                  String   @id @default(cuid())
+  userId              String
+  deviceId            String   @unique
+  platform            String   // ios | android | web
+  expoPushToken       String?
+  lastSeenAt          DateTime @default(now())
+  lastLibraryCursor   BigInt   @default(0)
+  lastPlaylistCursor  BigInt   @default(0)
+  createdAt           DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_devices")
+}
+
+// ─── Artists ──────────────────────────────────────────────────────────────────
+
+model Artist {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  name          String
+  localizedName Json?      // { kk: "...", ru: "...", en: "..." }
+  type          ArtistType @default(SOLO)
+  bio           String?
+  coverUrl      String?
+  isLocal       Boolean    @default(false) // казахстанский артист
+  isVerified    Boolean    @default(false)
+  isPublished   Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  releases      Release[]
+  trackArtists  TrackArtist[]
+  followers     ArtistFollow[]
+
+  @@map("artists")
+}
+
+// ─── Releases (Albums, EPs, Singles) ─────────────────────────────────────────
+
+model Release {
+  id              String      @id @default(cuid())
+  slug            String      @unique
+  title           String
+  localizedTitle  Json?
+  releaseType     ReleaseType
+  releaseDate     DateTime?
+  coverAssetUrl   String?
+  isPublished     Boolean     @default(false)
+  sourcePolicy    CatalogSourcePolicy @default(CURATED)
+  catalogVisibilityReason String?
+
+  artistId        String
+  artist          Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  tracks          Track[]
+  availability    ReleaseAvailability[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("releases")
+}
+
+// ─── Tracks ───────────────────────────────────────────────────────────────────
+
+model Track {
+  id              String        @id @default(cuid())
+  title           String
+  localizedTitle  Json?
+  durationMs      Int
+  trackNumber     Int?
+  isExplicit      Boolean       @default(false)
+  isLocal         Boolean       @default(false) // казахстанский трек
+  offlineEligible Boolean       @default(true)
+
+  releaseId       String
+  release         Release       @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  audioAssetKey   String?       // S3 object key
+  audioFormat     String?       // mp3 | aac | flac
+  audioBitrate    Int?          // kbps
+  genre           String?       // ID3 genre tag (e.g. "hip-hop", "pop", "jazz")
+
+  isPublished     Boolean       @default(false)
+  playbackStatus  PlaybackStatus @default(PROCESSING)
+  sourcePolicy    CatalogSourcePolicy @default(CURATED)
+  catalogVisibilityReason String?
+
+  tagStatus       String        @default("PENDING") // PENDING | VERIFIED | REJECTED
+  sourceId        String?       // ingestion batch ref
+  lastConfirmedAt DateTime?
+
+  artists          TrackArtist[]
+  availability     TrackAvailability[]
+  libraryItems     LibraryItem[]
+  playlistTracks   PlaylistTrack[]
+  playEvents       PlayEvent[]
+  recFeedback      RecommendationFeedback[]
+  testInteractions TestInteraction[]
+  chartScore       ChartScore?
+  audioFeatures    TrackAudioFeatures?
+  recommendations  RecommendationReason[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([isPublished, playbackStatus])
+  @@map("tracks")
+}
+
+model TrackArtist {
+  trackId   String
+  artistId  String
+  role      String  @default("PRIMARY") // PRIMARY | FEATURED | REMIXER
+  order     Int     @default(0)
+
+  track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  artist  Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@id([trackId, artistId])
+  @@map("track_artists")
+}
+
+// ─── Availability ─────────────────────────────────────────────────────────────
+
+model TrackAvailability {
+  id         String             @id @default(cuid())
+  trackId    String
+  territory  TerritoryCode
+  status     AvailabilityStatus @default(AVAILABLE)
+  reason     String?
+  startsAt   DateTime?
+  endsAt     DateTime?
+  updatedAt  DateTime           @updatedAt
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, territory])
+  @@map("track_availability")
+}
+
+model ReleaseAvailability {
+  id         String             @id @default(cuid())
+  releaseId  String
+  territory  TerritoryCode
+  status     AvailabilityStatus @default(AVAILABLE)
+  reason     String?
+  updatedAt  DateTime           @updatedAt
+
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, territory])
+  @@map("release_availability")
+}
+
+// ─── Library ──────────────────────────────────────────────────────────────────
+
+model LibraryItem {
+  id         String          @id @default(cuid())
+  userId     String
+  entityType LibraryEntityType
+  trackId    String?
+  releaseId  String?
+  playlistId String?
+  cursor     BigInt          @default(autoincrement())
+  addedAt    DateTime        @default(now())
+  removedAt  DateTime?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track   Track?   @relation(fields: [trackId], references: [id])
+
+  @@index([userId, entityType, removedAt])
+  @@index([cursor])
+  @@map("library_items")
+}
+
+// ─── Playlists ────────────────────────────────────────────────────────────────
+
+model Playlist {
+  id          String             @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  coverUrl    String?
+  visibility  PlaylistVisibility @default(PRIVATE)
+  cursor      BigInt             @default(autoincrement())
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks  PlaylistTrack[]
+
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  id          String   @id @default(cuid())
+  playlistId  String
+  trackId     String
+  position    Int
+  addedAt     DateTime @default(now())
+  removedAt   DateTime?
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id])
+
+  @@index([playlistId, removedAt, position])
+  @@map("playlist_tracks")
+}
+
+// ─── Play Events ──────────────────────────────────────────────────────────────
+
+enum PlayEventAction {
+  START
+  PAUSE
+  RESUME
+  COMPLETE
+  SKIP
+}
+
+model PlayEvent {
+  id              String          @id @default(cuid())
+  userId          String
+  trackId         String
+  deviceId        String?
+  startedAt       DateTime        @default(now())
+  completionPct   Int?            // 0-100
+  durationMs      Int?
+  locale          LocaleCode      @default(ru)
+  territory       TerritoryCode   @default(KZ)
+
+  // Test mode
+  testSessionId   String?
+
+  // Anti-manipulation fields
+  action          PlayEventAction @default(START)
+  position        Float?          // current position in seconds at event time
+  sessionId       String?         // client-generated UUID per listening session
+  clientTimestamp DateTime?       // timestamp as reported by client
+  suspicious      Boolean         @default(false)
+
+  user  User  @relation(fields: [userId], references: [id])
+  track Track @relation(fields: [trackId], references: [id])
+
+  @@index([userId, startedAt])
+  @@index([trackId, startedAt])
+  @@index([trackId, suspicious, startedAt])
+  @@map("play_events")
+}
+
+// ─── Chart Score Cache ────────────────────────────────────────────────────────
+
+model ChartScore {
+  id                    String   @id @default(cuid())
+  trackId               String   @unique
+  score                 Float    @default(0)
+  completionCount       Int      @default(0)
+  addToLibraryCount     Int      @default(0)
+  repeatPlayCount       Int      @default(0)
+  uniqueUsersCount      Int      @default(0)
+  rawStartCount         Int      @default(0)
+  suspiciousEventCount  Int      @default(0)
+  windowDays            Int      @default(7)
+  calculatedAt          DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([score])
+  @@map("chart_scores")
+}
+
+// ─── Test Mode ───────────────────────────────────────────────────────────────
+
+enum TestSessionStatus {
+  ACTIVE
+  ENDED_KEPT
+  ENDED_DISCARDED
+}
+
+enum TestInteractionAction {
+  LIKE
+  SKIP
+  PLAY
+  UNLIKE
+}
+
+model TestSession {
+  id           String            @id @default(cuid())
+  userId       String
+  status       TestSessionStatus @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  endedAt      DateTime?
+
+  user         User              @relation(fields: [userId], references: [id])
+  interactions TestInteraction[]
+
+  @@index([userId, status])
+  @@map("test_sessions")
+}
+
+model TestInteraction {
+  id            String                @id @default(cuid())
+  sessionId     String
+  trackId       String
+  action        TestInteractionAction
+  createdAt     DateTime              @default(now())
+
+  session       TestSession           @relation(fields: [sessionId], references: [id])
+  track         Track                 @relation(fields: [trackId], references: [id])
+
+  @@index([sessionId])
+  @@map("test_interactions")
+}
+
+// ─── Recommendations ──────────────────────────────────────────────────────────
+
+model RecommendationFeedback {
+  id        String                     @id @default(cuid())
+  userId    String
+  trackId   String
+  kind      RecommendationFeedbackKind
+  createdAt DateTime                   @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  track Track @relation(fields: [trackId], references: [id])
+
+  @@index([userId, trackId])
+  @@map("recommendation_feedback")
+}
+
+model TrackAudioFeatures {
+  id           String                      @id @default(cuid())
+  trackId      String                      @unique
+  track        Track                       @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  bpm          Float?
+  energy       Float?
+  valence      Float?
+  danceability Float?
+  acousticness Float?
+  loudness     Float?
+  key          Int?
+  mode         Int?
+  embedding    Unsupported("vector(512)")?
+  updatedAt    DateTime                    @updatedAt
+
+  @@map("track_audio_features")
+}
+
+model UserRecommendationProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weightArtist     Float   @default(0.30)
+  weightGenre      Float   @default(0.20)
+  weightAcoustic   Float   @default(0.20)
+  weightKazakh     Float   @default(0.10)
+  weightChart      Float   @default(0.10)
+  weightFreshness  Float   @default(0.10)
+  updatedAt        DateTime @updatedAt
+
+  @@map("user_recommendation_profiles")
+}
+
+model RecommendationReason {
+  id         String   @id @default(cuid())
+  userId     String
+  trackId    String
+  reasons    Json
+  score      Float
+  servedAt   DateTime @default(now())
+  clicked    Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([userId, servedAt])
+  @@map("recommendation_reasons")
+}
+
+// ─── Charts ───────────────────────────────────────────────────────────────────
+
+model Chart {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  territory   TerritoryCode @default(KZ)
+  isLocal     Boolean       @default(true)
+  isPublished Boolean       @default(false)
+  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime      @default(now())
+
+  entries ChartEntry[]
+
+  @@map("charts")
+}
+
+model ChartEntry {
+  id        String   @id @default(cuid())
+  chartId   String
+  trackId   String
+  position  Int
+  prevPos   Int?
+  peakPos   Int?
+  weeksOn   Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  chart Chart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, trackId])
+  @@index([chartId, position])
+  @@map("chart_entries")
+}
+
+// ─── Ingestion ────────────────────────────────────────────────────────────────
+
+model IngestionBatch {
+  id          String               @id @default(cuid())
+  sourceType  IngestionSourceType
+  status      IngestionBatchStatus @default(RECEIVED)
+  sourceRef   String?
+  submittedBy String?
+  itemCount   Int                  @default(0)
+  errorLog    String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@map("ingestion_batches")
+}
+
+// ─── App Feedback ─────────────────────────────────────────────────────────────
+
+model AppFeedback {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category    String
+  message     String   @db.Text
+  appVersion  String?
+  platform    String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+
+  @@map("app_feedback")
+}
+
+// ─── Taste Clone ─────────────────────────────────────────────────────────────
+
+model PublicProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String
+  bio         String?
+  genreTags   String[] // top genres from user's listening history
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cloneSessions CloneSession[]
+
+  @@map("public_profiles")
+}
+
+model CloneSession {
+  id              String   @id @default(cuid())
+  clonerUserId    String
+  sourceProfileId String
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  isActive        Boolean  @default(true)
+
+  clonerUser    User          @relation(fields: [clonerUserId], references: [id], onDelete: Cascade)
+  sourceProfile PublicProfile @relation(fields: [sourceProfileId], references: [id], onDelete: Cascade)
+
+  @@index([clonerUserId, isActive])
+  @@map("clone_sessions")
+}
+
+// ─── Social Graph ─────────────────────────────────────────────────────────────
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+model Friendship {
+  id         String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status     FriendshipStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@map("friendships")
+}
+
+model ArtistFollow {
+  id        String   @id @default(cuid())
+  userId    String
+  artistId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, artistId])
+  @@index([userId])
+  @@map("artist_follows")
+}
+
+// ─── Admin Audit ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  targetId   String?
+  targetType String?
+  before     Json?
+  after      Json?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  actor      User?    @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}

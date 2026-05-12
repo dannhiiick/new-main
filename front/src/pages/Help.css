@@ -1,0 +1,161 @@
+.help-page {
+  padding: 8px;
+}
+
+.help-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(130deg, #f8fafc 0%, #eef6ff 55%, #edf7f5 100%);
+}
+
+.help-hero-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%);
+  flex-shrink: 0;
+}
+
+.help-hero h2 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.help-card,
+.help-section,
+.help-contact {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.help-card-head,
+.help-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.help-card h3,
+.help-section h3,
+.help-contact h3 {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.help-card p,
+.help-contact p {
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.help-card code,
+.command-list code {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 12px;
+}
+
+.help-links,
+.help-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.help-links a,
+.help-actions a,
+.help-contact a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(29, 78, 216, 0.08);
+  border: 1px solid rgba(29, 78, 216, 0.18);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.help-section {
+  margin-bottom: 22px;
+}
+
+.faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.faq-item p {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.help-contact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.command-list {
+  display: grid;
+  gap: 10px;
+}
+
+.compact {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .help-hero,
+  .help-contact {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
