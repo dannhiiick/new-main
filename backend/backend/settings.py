@@ -21,16 +21,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-qi0q!s##y=-%cg===i!t7kj5bw$p8aog_^$85)r^ouk4#v32$(',
+# В продакшене задайте DJANGO_SECRET_KEY в окружении / WSGI (не храните секрет в git).
+_DEFAULT_SECRET_KEY = (
+    "django-insecure-qi0q-s-cg-i-t7kj5bw-p8aog-r-85-rouk4-v32-REPLACE-IN-ENV"
 )
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", _DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
 _hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "").strip()
-ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()] if _hosts else ["*"]
+_allowed = [h.strip() for h in _hosts.split(",") if h.strip()]
+# Пустой список (например env " , , ") ломает Django → 500 / DisallowedHost
+ALLOWED_HOSTS = _allowed if _allowed else ["*"]
 
 # За nginx / облачным балансировщиком: корректный Host и https в absolute_uri() для /media/
 if os.environ.get("DJANGO_BEHIND_PROXY", "").lower() in ("1", "true", "yes"):

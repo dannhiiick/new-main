@@ -65,7 +65,7 @@ else:
         re_path(
             rf"^{media_prefix}/(?P<path>.*)$",
             serve,
-            {"document_root": settings.MEDIA_ROOT},
+            {"document_root": str(settings.MEDIA_ROOT)},
         ),
     ]
 
