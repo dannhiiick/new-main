@@ -2,6 +2,9 @@ venv/
 __pycache__/
 *.pyc
 
+# Runtime temp (see backend/wsgi.py TMPDIR)
+backend/tmp/
+
 # Local media files are served from disk in development.
 *.mp3
 *.wav

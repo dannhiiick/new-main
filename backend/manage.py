@@ -2,6 +2,15 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+
+# Same as wsgi.py: ensure tempfile has a writable directory (PythonAnywhere Bash / workers).
+_backend_dir = Path(__file__).resolve().parent
+_runtime_tmp = _backend_dir / "tmp"
+_runtime_tmp.mkdir(exist_ok=True)
+os.environ.setdefault("TMPDIR", str(_runtime_tmp))
+os.environ.setdefault("TEMP", str(_runtime_tmp))
+os.environ.setdefault("TMP", str(_runtime_tmp))
 
 
 def main():
