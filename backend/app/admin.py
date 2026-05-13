@@ -19,28 +19,36 @@ class ArtistAdmin(admin.ModelAdmin):
 
 @admin.register(Track)
 class TrackAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "artist", "genre", "language", "plays", "audio_status")
-    list_filter = ("genre", "language", "artist")
-    search_fields = ("title", "artist", "audio_file")
+    list_display = ("id", "title", "artist", "genre", "language", "explicit", "ai_generated", "label_name", "plays", "audio_status")
+    list_filter = ("genre", "language", "explicit", "ai_generated")
+    search_fields = ("title", "artist", "label_name", "music_author", "lyrics_author")
     readonly_fields = ("audio_preview",)
     fieldsets = (
-        ("Основное", {"fields": ("title", "artist", "artist_ref", "genre", "language")}),
-        ("Показ на главной", {"fields": ("cover", "duration", "plays")}),
-        ("Аудио", {"fields": ("audio_file", "audio_preview")}),
+        ("📀 Основная информация", {
+            "fields": ("title", "artist", "artist_ref", "genre", "language", "duration", "plays")
+        }),
+        ("🖼️ Медиафайлы", {
+            "fields": ("cover_image", "cover", "audio_file", "audio_preview")
+        }),
+        ("✍️ Авторство", {
+            "fields": ("music_author", "lyrics_author", "arranger", "mixing_engineer")
+        }),
+        ("ℹ️ Метаданные", {
+            "fields": ("explicit", "ai_generated", "label_name", "copyright")
+        }),
     )
 
     @admin.display(description="Аудио")
     def audio_status(self, obj):
-        return "Есть" if obj.audio_file else "Нет"
+        return "✅ Есть" if obj.audio_file else "❌ Нет"
 
     @admin.display(description="Превью")
     def audio_preview(self, obj):
         if not obj.audio_file:
-            return "Файл не указан"
-
+            return "Файл не загружен"
         return format_html(
-            '<audio controls preload="none" style="width: min(460px, 100%);" src="/api/media/music/{}"></audio>',
-            quote(obj.audio_file, safe=""),
+            '<audio controls preload="none" style="width: min(460px, 100%);" src="{}"></audio>',
+            obj.audio_file.url,
         )
 
 

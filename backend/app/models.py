@@ -55,30 +55,68 @@ class UserProfile(models.Model):
 
 
 class Track(models.Model):
-    title = models.CharField(max_length=255)
-    artist = models.CharField(max_length=255)
-    duration = models.PositiveIntegerField(help_text="Seconds")
-    plays = models.PositiveBigIntegerField(default=0)
-    genre = models.CharField(max_length=255)
-    language = models.CharField(max_length=255)
-    cover = models.CharField(max_length=255, blank=True)
-    audio_file = models.CharField(
-        max_length=500,
+    class Language(models.TextChoices):
+        KAZAKH = "Kazakh", "Казахский"
+        RUSSIAN = "Russian", "Русский"
+        ENGLISH = "English", "Английский"
+        OTHER = "Other", "Другой"
+
+    # --- Основная информация ---
+    title = models.CharField(max_length=255, verbose_name="Название сингла")
+    artist = models.CharField(max_length=255, verbose_name="Имя артиста")
+    genre = models.CharField(max_length=255, verbose_name="Жанр")
+    language = models.CharField(
+        max_length=50,
+        choices=Language.choices,
+        default=Language.KAZAKH,
+        verbose_name="Язык сингла",
+    )
+    duration = models.PositiveIntegerField(help_text="Секунды", default=0, verbose_name="Длительность")
+    plays = models.PositiveBigIntegerField(default=0, verbose_name="Прослушиваний")
+
+    # --- Медиафайлы ---
+    cover_image = models.ImageField(
+        upload_to="covers/",
         blank=True,
-        help_text="Audio filename stored in the project music folder.",
+        null=True,
+        verbose_name="Обложка песни",
+    )
+    cover = models.CharField(max_length=255, blank=True, verbose_name="Код обложки (старое)")
+    audio_file = models.FileField(
+        upload_to="music/",
+        blank=True,
+        null=True,
+        verbose_name="Аудиофайл",
     )
 
-    # Optional normalization: connect track to Artist record.
+    # --- Авторство ---
+    music_author = models.CharField(max_length=500, blank=True, verbose_name="Автор музыки")
+    lyrics_author = models.CharField(max_length=500, blank=True, verbose_name="Автор слов")
+    arranger = models.CharField(max_length=500, blank=True, verbose_name="Аранжировщик")
+    mixing_engineer = models.CharField(max_length=500, blank=True, verbose_name="Сведение")
+
+    # --- Метаданные ---
+    explicit = models.BooleanField(default=False, verbose_name="Нецензурные слова")
+    ai_generated = models.BooleanField(default=False, verbose_name="Создано с помощью ИИ")
+    label_name = models.CharField(max_length=255, blank=True, verbose_name="Название лейбла")
+    copyright = models.CharField(max_length=500, blank=True, verbose_name="Авторское право")
+
+    # --- Связь с артистом ---
     artist_ref = models.ForeignKey(
         Artist,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="tracks",
+        verbose_name="Артист (из каталога)",
     )
 
+    class Meta:
+        verbose_name = "Трек"
+        verbose_name_plural = "Треки"
+
     def __str__(self) -> str:
-        return self.title
+        return f"{self.artist} — {self.title}"
 
 
 class Album(models.Model):

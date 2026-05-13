@@ -124,6 +124,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 MUSIC_ROOT = BASE_DIR.parent
 
 # DRF / CORS (dev)
