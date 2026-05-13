@@ -6,8 +6,8 @@ from .models import Artist, Track, Album, Playlist, Concert
 
 
 class TrackSerializer(serializers.ModelSerializer):
-    audioFile = serializers.CharField(source="audio_file", read_only=True)
     audioUrl = serializers.SerializerMethodField()
+    coverUrl = serializers.SerializerMethodField()
 
     class Meta:
         model = Track
@@ -18,22 +18,30 @@ class TrackSerializer(serializers.ModelSerializer):
             "duration",
             "plays",
             "cover",
+            "coverUrl",
             "genre",
             "language",
-            "audioFile",
+            "explicit",
+            "ai_generated",
+            "label_name",
             "audioUrl",
         ]
 
     def get_audioUrl(self, obj):
         if not obj.audio_file:
             return ""
-
         request = self.context.get("request")
-        path = f"/api/media/music/{quote(obj.audio_file, safe='')}"
-        if request is None:
-            return path
+        if request:
+            return request.build_absolute_uri(obj.audio_file.url)
+        return obj.audio_file.url
 
-        return request.build_absolute_uri(path)
+    def get_coverUrl(self, obj):
+        if not obj.cover_image:
+            return ""
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.cover_image.url)
+        return obj.cover_image.url
 
 
 class ArtistSerializer(serializers.ModelSerializer):
