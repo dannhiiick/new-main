@@ -3,7 +3,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.http import FileResponse, Http404
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -18,6 +18,7 @@ from .serializers import (
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def tracks_list(request):
     qs = Track.objects.all().order_by("-plays", "id")
@@ -25,6 +26,7 @@ def tracks_list(request):
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def artists_list(request):
     qs = Artist.objects.all().order_by("id").prefetch_related("tracks")
@@ -32,6 +34,7 @@ def artists_list(request):
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def albums_list(request):
     qs = Album.objects.all().order_by("-year", "id").prefetch_related("tracks")
@@ -39,6 +42,7 @@ def albums_list(request):
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def playlists_list(request):
     qs = Playlist.objects.all().order_by("id").prefetch_related("tracks")
@@ -46,6 +50,7 @@ def playlists_list(request):
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def concerts_list(request):
     qs = Concert.objects.all().order_by("id")
@@ -53,6 +58,7 @@ def concerts_list(request):
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def music_file(request, filename):
     music_root = Path(settings.MUSIC_ROOT).resolve()
