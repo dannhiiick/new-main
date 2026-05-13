@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qi0q!s##y=-%cg===i!t7kj5bw$p8aog_^$85)r^ouk4#v32$('
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-qi0q!s##y=-%cg===i!t7kj5bw$p8aog_^$85)r^ouk4#v32$(',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = ["*"]
+_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "").strip()
+ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()] if _hosts else ["*"]
+
+# За nginx / облачным балансировщиком: корректный Host и https в absolute_uri() для /media/
+if os.environ.get("DJANGO_BEHIND_PROXY", "").lower() in ("1", "true", "yes"):
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -138,6 +148,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
     ),
 }
 

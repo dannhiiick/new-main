@@ -128,6 +128,13 @@
   justify-content: center;
   font-size: 48px;
   margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .card-content h4 {
@@ -224,6 +231,13 @@
   justify-content: center;
   font-size: 64px;
   margin: 0 auto 16px;
+  overflow: hidden;
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .album-card h4 {
@@ -292,6 +306,13 @@
   justify-content: center;
   font-size: 56px;
   margin: 0 auto 16px;
+  overflow: hidden;
+}
+
+.artist-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .artist-card h4 {
@@ -369,6 +390,13 @@
   justify-content: center;
   font-size: 40px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.mini-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .mini-info {

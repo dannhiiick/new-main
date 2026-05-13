@@ -16,26 +16,47 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import FileResponse
-import os
-
-FRONTEND_DIR = os.path.join(settings.BASE_DIR, '..', 'front', 'dist')
+from django.http import FileResponse, HttpResponse
+from pathlib import Path
 
 
-def serve_frontend(request, path=''):
+def serve_frontend(request, path=""):
     """Serve React SPA — static assets or index.html for client-side routing."""
-    file_path = os.path.join(FRONTEND_DIR, path)
-    if path and os.path.isfile(file_path):
-        return FileResponse(open(file_path, 'rb'))
-    return FileResponse(open(os.path.join(FRONTEND_DIR, 'index.html'), 'rb'))
+    dist = (Path(settings.BASE_DIR).resolve().parent / "front" / "dist").resolve()
+    index_path = dist / "index.html"
+    if not index_path.is_file():
+        return HttpResponse(
+            "<h1>Frontend not built</h1>"
+            "<p>Соберите фронт: <code>cd front && npm ci && npm run build</code>, "
+            "затем задеплойте каталог <code>front/dist</code> рядом с <code>backend</code>.</p>",
+            status=503,
+            content_type="text/html; charset=utf-8",
+        )
+    safe_path = (path or "").replace("\\", "/").strip("/")
+    dist_resolved = dist.resolve()
+    if safe_path:
+        try:
+            target = (dist / safe_path).resolve()
+        except (OSError, ValueError):
+            return FileResponse(index_path.open("rb"))
+        if dist_resolved not in target.parents and target != dist_resolved:
+            return FileResponse(index_path.open("rb"))
+        if target.is_file():
+            return FileResponse(target.open("rb"))
+    return FileResponse(index_path.open("rb"))
 
 
+# Media must be registered before the SPA catch-all, otherwise `/media/...` is handled as a frontend path (broken uploads from admin).
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('app.api_urls')),
+]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [
     re_path(r'^(?P<path>.*)$', serve_frontend),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
 

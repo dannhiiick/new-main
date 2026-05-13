@@ -5,6 +5,8 @@ export interface Track {
   duration: number;
   plays: number;
   cover?: string;
+  /** Absolute URL of cover from Django admin (`cover_image`) */
+  coverUrl?: string;
   genre: string;
   language: string;
   audioFile?: string;
