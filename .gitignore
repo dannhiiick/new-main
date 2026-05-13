@@ -4,6 +4,7 @@ __pycache__/
 
 # Runtime temp (see backend/wsgi.py TMPDIR)
 backend/tmp/
+backend/data/
 
 # Local media files are served from disk in development.
 *.mp3

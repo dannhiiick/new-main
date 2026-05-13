@@ -28,17 +28,11 @@ class TrackSerializer(serializers.ModelSerializer):
     def get_audioUrl(self, obj):
         if not obj.audio_file:
             return ""
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(obj.audio_file.url)
         return obj.audio_file.url
 
     def get_coverUrl(self, obj):
         if not obj.cover_image:
             return ""
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(obj.cover_image.url)
         return obj.cover_image.url
 
 
