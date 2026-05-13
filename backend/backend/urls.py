@@ -19,6 +19,7 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse, HttpResponse
+from django.views.static import serve
 from pathlib import Path
 
 
@@ -54,7 +55,19 @@ urlpatterns = [
     path('api/', include('app.api_urls')),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# django.conf.urls.static.static() only registers /media/ when DEBUG=True.
+# On PythonAnywhere production (DEBUG=False) uploads from admin still need /media/.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    media_prefix = settings.MEDIA_URL.strip("/")
+    urlpatterns += [
+        re_path(
+            rf"^{media_prefix}/(?P<path>.*)$",
+            serve,
+            {"document_root": settings.MEDIA_ROOT},
+        ),
+    ]
 
 urlpatterns += [
     re_path(r'^(?P<path>.*)$', serve_frontend),
