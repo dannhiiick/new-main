@@ -16,7 +16,7 @@ function formatTime(seconds: number) {
 export function Player({ currentTrack }: PlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(70);
+  const [volume, setVolume] = useState(100);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(currentTrack?.duration || 0);
   const hasAudio = Boolean(currentTrack?.audioUrl);
@@ -32,11 +32,20 @@ export function Player({ currentTrack }: PlayerProps) {
     }
 
     const audio = audioRef.current;
+    audio.muted = false; // Force unmute
     audio.load();
-    void audio
-      .play()
-      .then(() => setIsPlaying(true))
-      .catch(() => setIsPlaying(false));
+    
+    const playAudio = async () => {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.error("Playback failed:", err);
+        setIsPlaying(false);
+      }
+    };
+    
+    void playAudio();
   }, [currentTrack]);
 
   useEffect(() => {
