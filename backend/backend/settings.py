@@ -154,7 +154,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 MUSIC_ROOT = BASE_DIR.parent
-
+STATIC_ROOT = os.path.join(str(BASE_DIR), 'staticfiles')
 # DRF / CORS (dev)
 CORS_ALLOW_ALL_ORIGINS = True
 
