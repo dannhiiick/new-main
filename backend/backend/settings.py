@@ -31,9 +31,13 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", _DEFAULT_SECRET_KEY)
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
 _hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "").strip()
-_allowed = [h.strip() for h in _hosts.split(",") if h.strip()]
+_allowed = [h.strip() for h in _hosts.split(",") if h.strip()] + ['music-yzy1.onrender.com']
 # Пустой список (например env " , , ") ломает Django → 500 / DisallowedHost
 ALLOWED_HOSTS = _allowed if _allowed else ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://music-yzy1.onrender.com'
+]
 
 # За nginx / облачным балансировщиком: корректный Host и https в absolute_uri() для /media/
 if os.environ.get("DJANGO_BEHIND_PROXY", "").lower() in ("1", "true", "yes"):
