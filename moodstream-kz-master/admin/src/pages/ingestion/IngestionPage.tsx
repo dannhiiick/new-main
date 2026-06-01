@@ -1,5 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { getAdminToken, adminFetch, ApiError } from '../../lib/api'
+import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -173,19 +175,19 @@ export function IngestionPage(): React.ReactElement {
               : 'Загрузи сразу все файлы — треки создадутся автоматически'}
           </p>
         </div>
-        <div className="flex bg-zinc-900 border border-border-default rounded-lg p-0.5 gap-0.5">
+        <div className="flex bg-[#141416] border border-[#1C1C1F] rounded-xl p-0.5 gap-0.5">
           <button
             onClick={() => setMode('single')}
-            className={`px-3 py-1.5 text-xs rounded-md transition-colors font-medium ${
-              mode === 'single' ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-zinc-300'
+            className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-150 font-medium ${
+              mode === 'single' ? 'bg-[#202024] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             Один файл
           </button>
           <button
             onClick={() => setMode('batch')}
-            className={`px-3 py-1.5 text-xs rounded-md transition-colors font-medium ${
-              mode === 'batch' ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-zinc-300'
+            className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-150 font-medium ${
+              mode === 'batch' ? 'bg-[#202024] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             Пакетная загрузка
@@ -313,20 +315,22 @@ function SingleIngestion(): React.ReactElement {
 
   if (createResult) {
     return (
-      <div className="max-w-lg mx-auto mt-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-4">
-          <span className="text-3xl">✓</span>
+      <div className="max-w-lg mx-auto mt-16 text-center font-sans">
+        <div className="w-16 h-16 rounded-full bg-green-950/20 border border-green-800/40 flex items-center justify-center mx-auto mb-4 text-green-400">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
         </div>
         <h2 className="text-xl font-semibold text-white mb-2">Трек создан!</h2>
-        <p className="text-zinc-400 text-sm mb-6">«{createResult.trackTitle}» — {createResult.artistName}</p>
-        <div className="bg-surface border border-border-default rounded-lg p-4 text-left text-xs text-zinc-500 space-y-1 mb-6">
-          <div><span className="text-zinc-600">Track ID:</span> <span className="font-mono text-zinc-300">{createResult.trackId}</span></div>
-          <div><span className="text-zinc-600">Release ID:</span> <span className="font-mono text-zinc-300">{createResult.releaseId}</span></div>
-          <div><span className="text-zinc-600">Artist ID:</span> <span className="font-mono text-zinc-300">{createResult.artistId}</span></div>
+        <p className="text-zinc-400 text-sm mb-6 font-medium">«{createResult.trackTitle}» — {createResult.artistName}</p>
+        <div className="bg-[#141416] border border-[#1C1C1F] rounded-xl p-5 text-left text-xs text-zinc-500 space-y-1.5 mb-6">
+          <div><span className="text-zinc-500">Track ID:</span> <span className="font-mono text-zinc-300">{createResult.trackId}</span></div>
+          <div><span className="text-zinc-500">Release ID:</span> <span className="font-mono text-zinc-300">{createResult.releaseId}</span></div>
+          <div><span className="text-zinc-500">Artist ID:</span> <span className="font-mono text-zinc-300">{createResult.artistId}</span></div>
         </div>
-        <button onClick={handleReset} className="px-5 py-2.5 bg-accent text-black text-sm font-semibold rounded-md hover:bg-accent/90 transition-colors">
+        <Button onClick={handleReset} variant="primary" size="md">
           Загрузить ещё
-        </button>
+        </Button>
       </div>
     )
   }
@@ -338,26 +342,31 @@ function SingleIngestion(): React.ReactElement {
         onDragLeave={() => setIsDragOver(false)}
         onDrop={onDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-          isDragOver ? 'border-accent bg-accent/5' : file ? 'border-green-600/50 bg-green-900/5' : 'border-border-default hover:border-zinc-600 bg-surface'
+        className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-150 ${
+          isDragOver 
+            ? 'border-white bg-[#202024]/40' 
+            : file 
+              ? 'border-green-800/40 bg-green-950/5' 
+              : 'border-[#1C1C1F] hover:border-zinc-500 bg-[#141416]'
         }`}
       >
         <input ref={fileInputRef} type="file" accept="audio/*,.mp3,.flac,.aac,.ogg,.opus,.wav,.ape,.wma,.m4a,.aiff,.alac,.dsf" className="hidden" onChange={onInputChange} />
         {analyzing ? (
-          <div className="space-y-2">
-            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-zinc-400 text-sm">Анализирую метаданные и обложку…</p>
+          <div className="space-y-3 py-2">
+            <div className="w-8 h-8 border-2 border-[#D4D1CA] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-zinc-400 text-sm font-medium">Анализирую метаданные и обложку…</p>
           </div>
         ) : file ? (
-          <div className="space-y-1">
-            <p className="text-2xl">♪</p>
+          <div className="space-y-1.5">
             <p className="text-white text-sm font-medium">{file.name}</p>
             <p className="text-zinc-500 text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
             <p className="text-zinc-600 text-xs mt-2">Кликни для замены</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            <p className="text-3xl text-zinc-600">↑</p>
+          <div className="space-y-3">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="w-10 h-10 text-zinc-600 mx-auto">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+            </svg>
             <p className="text-zinc-400 text-sm">Перетащи MP3 или кликни для выбора</p>
             <p className="text-zinc-600 text-xs">MP3, FLAC, AAC, OGG, WAV · до 50 MB</p>
           </div>
@@ -414,21 +423,25 @@ function SingleIngestion(): React.ReactElement {
                   placeholder="Поиск или новый артист…"
                   required
                 />
-                {form.artistId && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 text-xs">✓ в БД</span>}
+                {form.artistId && (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-green-400 absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                )}
                 {showDropdown && artistOptions.length > 0 && (
-                  <ul className="absolute z-20 left-0 right-0 top-full mt-1 bg-zinc-900 border border-border-default rounded-lg shadow-xl overflow-hidden">
+                  <ul className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-[#141416] border border-[#1C1C1F] rounded-xl shadow-2xl overflow-hidden divide-y divide-[#1C1C1F]/40">
                     {artistOptions.map(a => (
                       <li key={a.id}>
-                        <button type="button" onMouseDown={() => selectArtist(a)} className="w-full text-left px-3 py-2 text-sm hover:bg-white/5 flex items-center justify-between">
-                          <span className="text-white">{a.name}</span>
-                          {a.isLocal && <span className="text-accent text-xs">KZ</span>}
+                        <button type="button" onMouseDown={() => selectArtist(a)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-[#202024] flex items-center justify-between text-zinc-300 hover:text-white transition-colors">
+                          <span>{a.name}</span>
+                          {a.isLocal && <Badge label="KZ" variant="blue" />}
                         </button>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
-              {!form.artistId && artistSearch && <p className="text-zinc-600 text-xs mt-1">Новый артист будет создан</p>}
+              {!form.artistId && artistSearch && <p className="text-zinc-500 text-xs mt-1">Новый артист будет создан</p>}
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
@@ -460,15 +473,19 @@ function SingleIngestion(): React.ReactElement {
             <Field label="Обложка">
               <div className="flex items-center gap-3">
                 {form.coverUrl ? (
-                  <img src={form.coverUrl} alt="cover" className="w-16 h-16 rounded-lg object-cover border border-border-default" />
+                  <img src={form.coverUrl} alt="cover" className="w-16 h-16 rounded-xl object-cover border border-[#1C1C1F]" />
                 ) : (
-                  <div className="w-16 h-16 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-600 text-2xl border border-border-default">♪</div>
+                  <div className="w-16 h-16 rounded-xl bg-[#202024] flex items-center justify-center border border-[#1C1C1F]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-zinc-600">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 0v15m0-15l-10.5 3M9 9V21m0-12a3 3 0 100-6 3 3 0 000 6zm10.5-3a3 3 0 100-6 3 3 0 000 6z" />
+                    </svg>
+                  </div>
                 )}
                 <div className="flex flex-col gap-1.5">
-                  <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover} className="text-xs text-zinc-400 hover:text-white border border-border-default rounded px-2.5 py-1 hover:bg-white/5 transition-colors disabled:opacity-50">
+                  <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover} className="text-xs text-zinc-400 hover:text-white border border-[#1C1C1F] rounded-lg px-3 py-1.5 hover:bg-[#202024] transition-colors disabled:opacity-50 font-medium">
                     {uploadingCover ? 'Загружаю…' : form.coverUrl ? 'Заменить' : 'Загрузить обложку'}
                   </button>
-                  {form.coverUrl && <button type="button" onClick={() => setForm(p => ({ ...p, coverUrl: null }))} className="text-xs text-zinc-600 hover:text-red-400 transition-colors">Убрать</button>}
+                  {form.coverUrl && <button type="button" onClick={() => setForm(p => ({ ...p, coverUrl: null }))} className="text-xs text-zinc-500 hover:text-red-400 transition-colors font-medium">Убрать</button>}
                 </div>
                 <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) void handleCoverFile(f) }} />
               </div>
@@ -605,8 +622,10 @@ function BatchIngestion(): React.ReactElement {
       >
         <input ref={fileInputRef} type="file" accept="audio/*,.mp3,.flac,.aac,.ogg,.opus,.wav,.ape,.wma,.m4a,.aiff,.alac,.dsf" multiple className="hidden" onChange={onInputChange} disabled={running} />
         {files.length === 0 ? (
-          <div className="space-y-2">
-            <p className="text-3xl text-zinc-600">↑</p>
+          <div className="space-y-3">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="w-10 h-10 text-zinc-600 mx-auto">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+            </svg>
             <p className="text-zinc-300 text-sm font-medium">Перетащи все MP3 сюда или кликни для выбора</p>
             <p className="text-zinc-600 text-xs">Поддержка нескольких файлов · MP3, FLAC, AAC · до 50 MB каждый</p>
             <p className="text-zinc-700 text-xs mt-2">Теги (название, артист, жанр, обложка) извлекутся автоматически</p>
@@ -694,8 +713,16 @@ function BatchRow({
       <div className="w-5 flex-shrink-0 flex items-center justify-center">
         {item.status === 'pending' && <span className="w-2 h-2 rounded-full bg-zinc-600 block" />}
         {item.status === 'uploading' && <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />}
-        {item.status === 'done' && <span className="text-green-400 text-sm">✓</span>}
-        {item.status === 'error' && <span className="text-red-400 text-sm">✕</span>}
+        {item.status === 'done' && (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-green-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        )}
+        {item.status === 'error' && (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-red-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )}
       </div>
 
       {/* File info */}
@@ -750,11 +777,11 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        className={`relative w-9 h-5 rounded-full transition-colors ${checked ? 'bg-accent' : 'bg-zinc-700'}`}
+        className={`relative w-9 h-5 rounded-full transition-colors ${checked ? 'bg-white' : 'bg-[#202024]'}`}
       >
-        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform ${checked ? 'translate-x-4 bg-black' : 'translate-x-0 bg-zinc-500'}`} />
       </button>
-      <span className="text-sm text-zinc-400">{label}</span>
+      <span className="text-sm text-zinc-400 font-medium">{label}</span>
     </label>
   )
 }

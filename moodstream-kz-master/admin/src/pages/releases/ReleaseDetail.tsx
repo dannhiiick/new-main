@@ -81,9 +81,9 @@ function InlineEdit({ value, onSave, placeholder }: InlineEditProps): React.Reac
         <input ref={ref} value={draft} onChange={e => setDraft(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') void save(); if (e.key === 'Escape') cancel() }}
           disabled={saving} placeholder={placeholder}
-          className="bg-surface-2 border border-accent rounded px-2 py-0.5 text-white text-sm focus:outline-none min-w-[180px]" />
+          className="bg-[#202024] border border-[#1C1C1F] rounded-lg px-2.5 py-1 text-white text-sm focus:outline-none min-w-[180px]" />
         <button onClick={() => void save()} disabled={saving}
-          className="text-accent text-xs hover:opacity-80 disabled:opacity-50">{saving ? '...' : '✓'}</button>
+          className="text-[#D4D1CA] text-xs font-semibold hover:opacity-80 disabled:opacity-50">{saving ? '...' : 'Сохранить'}</button>
         <button onClick={cancel} className="text-zinc-500 text-xs hover:text-white">✕</button>
       </span>
     )
@@ -93,7 +93,11 @@ function InlineEdit({ value, onSave, placeholder }: InlineEditProps): React.Reac
     <span className="group inline-flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors"
       onClick={() => { setDraft(value); setEditing(true) }} title="Нажмите чтобы редактировать">
       {value || <span className="text-zinc-600 italic">{placeholder ?? '—'}</span>}
-      <span className="opacity-0 group-hover:opacity-100 text-zinc-600 text-xs transition-opacity">✎</span>
+      <span className="opacity-0 group-hover:opacity-100 text-zinc-500 transition-opacity shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5 mt-0.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 20.013a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+        </svg>
+      </span>
     </span>
   )
 }
@@ -154,7 +158,14 @@ export function ReleaseDetail(): React.ReactElement {
         <p className="text-red-400 text-sm">{isError ? (error instanceof Error ? error.message : 'Ошибка') : 'Релиз не найден'}</p>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => void refetch()}>Повторить</Button>
-          <Link to="/releases"><Button variant="ghost">← Назад</Button></Link>
+          <Link to="/releases">
+            <Button variant="ghost" className="flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Назад
+            </Button>
+          </Link>
         </div>
       </div>
     )
@@ -164,24 +175,32 @@ export function ReleaseDetail(): React.ReactElement {
   const totalMs = release.tracks.reduce((s, t) => s + t.durationMs, 0)
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <Link to="/releases" className="inline-flex items-center gap-1.5 text-zinc-500 text-sm hover:text-white transition-colors">
-        ← Релизы
+    <div className="space-y-4 max-w-3xl font-sans">
+      <Link to="/releases" className="inline-flex items-center gap-2 text-zinc-500 text-sm hover:text-white transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        Релизы
       </Link>
 
       {/* Hero */}
-      <div className="bg-surface border border-border-default rounded-xl p-6">
+      <div className="bg-[#141416] border border-[#1C1C1F]/40 rounded-2xl p-6 shadow-sm">
         <div className="flex gap-5 items-start">
           {r.coverUrl
-            ? <img src={r.coverUrl} alt={r.title} className="w-28 h-28 rounded-lg object-cover shrink-0 shadow-lg" />
-            : <div className="w-28 h-28 rounded-lg bg-surface-2 flex items-center justify-center text-zinc-600 text-4xl shrink-0">💿</div>
+            ? <img src={r.coverUrl} alt={r.title} className="w-28 h-28 rounded-xl object-cover shrink-0 shadow-lg border border-[#1C1C1F]" />
+            : <div className="w-28 h-28 rounded-xl bg-[#202024] flex items-center justify-center shrink-0 border border-[#2C2C32]">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-zinc-600">
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </div>
           }
           <div className="flex-1 min-w-0">
-            <h1 className="text-white text-2xl font-bold">
+            <h1 className="text-white text-2xl font-bold leading-tight">
               <InlineEdit value={r.title} placeholder="Название релиза"
                 onSave={async val => { await patch({ title: val }); addToast('Название сохранено', 'success') }} />
             </h1>
-            <Link to={`/artists/${r.artist.id}`} className="text-zinc-400 text-sm hover:text-accent transition-colors mt-0.5 inline-block">
+            <Link to={`/artists/${r.artist.id}`} className="text-zinc-400 text-sm hover:text-accent transition-colors mt-1.5 inline-block font-medium">
               {r.artist.name}
             </Link>
             <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -196,26 +215,29 @@ export function ReleaseDetail(): React.ReactElement {
       </div>
 
       {/* Edit fields */}
-      <div className="bg-surface border border-border-default rounded-xl p-6">
-        <h2 className="text-zinc-400 text-xs uppercase tracking-widest font-semibold mb-4">Редактирование</h2>
+      <div className="bg-[#141416] border border-[#1C1C1F]/40 rounded-2xl p-6 shadow-sm">
+        <h2 className="text-zinc-500 text-[10px] uppercase tracking-widest font-semibold mb-4">Редактирование</h2>
 
         {/* Release type */}
-        <div className="flex items-center justify-between gap-4 py-2.5 border-b border-border-default">
+        <div className="flex items-center justify-between gap-4 py-3.5 border-b border-[#1C1C1F]/50">
           <span className="text-zinc-500 text-sm">Тип</span>
           <div className="relative">
             <button onClick={() => setTypeOpen(o => !o)}
-              className="flex items-center gap-1.5 text-white text-sm hover:text-accent transition-colors">
-              {RELEASE_TYPE_LABELS[r.releaseType] ?? r.releaseType} ▾
+              className="flex items-center gap-1.5 text-white text-sm hover:text-[#D4D1CA] transition-colors font-medium">
+              {RELEASE_TYPE_LABELS[r.releaseType] ?? r.releaseType}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5 text-zinc-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
             </button>
             {typeOpen && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-surface border border-border-default rounded-lg overflow-hidden shadow-xl min-w-[140px]">
+              <div className="absolute right-0 top-full mt-1.5 z-20 bg-[#141416] border border-[#1C1C1F] rounded-lg overflow-hidden shadow-xl min-w-[140px]">
                 {RELEASE_TYPES.map(t => (
                   <button key={t} onClick={async () => {
                     setTypeOpen(false)
                     await patch({ releaseType: t })
                     addToast(`Тип → ${RELEASE_TYPE_LABELS[t]}`, 'success')
                   }}
-                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-surface-2 transition-colors ${r.releaseType === t ? 'text-accent font-medium' : 'text-white'}`}>
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#202024] transition-colors ${r.releaseType === t ? 'text-white font-medium bg-[#202024]/40' : 'text-zinc-400'}`}>
                     {RELEASE_TYPE_LABELS[t]}
                   </button>
                 ))}
@@ -225,9 +247,9 @@ export function ReleaseDetail(): React.ReactElement {
         </div>
 
         {/* Release date */}
-        <div className="flex items-center justify-between gap-4 py-2.5 border-b border-border-default">
+        <div className="flex items-center justify-between gap-4 py-3.5 border-b border-[#1C1C1F]/50">
           <span className="text-zinc-500 text-sm">Дата выхода</span>
-          <span className="text-white text-sm">
+          <span className="text-white text-sm font-medium">
             <InlineEdit
               value={r.releaseDate ? r.releaseDate.split('T')[0]! : ''}
               placeholder="YYYY-MM-DD"
@@ -240,15 +262,15 @@ export function ReleaseDetail(): React.ReactElement {
         </div>
 
         {/* Published toggle */}
-        <div className="flex items-center justify-between gap-4 py-2.5 border-b border-border-default">
+        <div className="flex items-center justify-between gap-4 py-3 border-b border-[#1C1C1F]/50">
           <span className="text-zinc-500 text-sm">Опубликован</span>
           <button onClick={async () => { await patch({ isPublished: !r.isPublished }); addToast(`Публикация: ${!r.isPublished ? 'Да' : 'Нет'}`, 'success') }}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${r.isPublished ? 'bg-accent' : 'bg-zinc-700'}`}>
-            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${r.isPublished ? 'translate-x-4' : 'translate-x-1'}`} />
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${r.isPublished ? 'bg-white' : 'bg-[#202024]'}`}>
+            <span className={`inline-block h-3.5 w-3.5 transform rounded-full transition-transform ${r.isPublished ? 'translate-x-4 bg-black' : 'translate-x-1 bg-zinc-500'}`} />
           </button>
         </div>
 
-        <div className="flex items-start justify-between gap-4 py-2.5">
+        <div className="flex items-start justify-between gap-4 py-3">
           <span className="text-zinc-500 text-sm">ID</span>
           <code className="text-zinc-500 text-xs font-mono">{r.id}</code>
         </div>
@@ -256,27 +278,27 @@ export function ReleaseDetail(): React.ReactElement {
 
       {/* Track list */}
       {release.tracks.length > 0 && (
-        <div className="bg-surface border border-border-default rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-border-default">
-            <h2 className="text-zinc-400 text-xs uppercase tracking-widest font-semibold">
+        <div className="bg-[#141416] border border-[#1C1C1F]/40 rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-[#1C1C1F]/50">
+            <h2 className="text-zinc-500 text-[10px] uppercase tracking-widest font-semibold">
               Треки ({release.tracks.length})
             </h2>
           </div>
-          <div>
+          <div className="divide-y divide-[#1C1C1F]/60">
             {release.tracks.map((track, idx) => (
               <div key={track.id}
-                className="flex items-center gap-3 px-4 py-3 border-b border-border-default last:border-0 hover:bg-surface-2/40 transition-colors">
+                className="flex items-center gap-3 px-6 py-3.5 hover:bg-[#202024]/40 transition-colors">
                 <span className="text-zinc-600 text-xs w-5 text-right shrink-0">
                   {track.trackNumber ?? idx + 1}
                 </span>
                 <div className="flex-1 min-w-0">
                   <Link to={`/catalog/${track.id}`}
-                    className="text-white text-sm hover:text-accent transition-colors line-clamp-1">
+                    className="text-white text-sm font-medium hover:text-[#D4D1CA] transition-colors line-clamp-1">
                     {track.title}
                   </Link>
-                  <p className="text-zinc-600 text-xs mt-0.5">{track.artists.join(', ') || '—'}</p>
+                  <p className="text-zinc-500 text-xs mt-0.5">{track.artists.join(', ') || '—'}</p>
                 </div>
-                <span className="text-zinc-500 text-xs tabular-nums shrink-0">{formatDuration(track.durationMs)}</span>
+                <span className="text-zinc-500 text-xs font-mono tabular-nums shrink-0">{formatDuration(track.durationMs)}</span>
                 <Badge label={track.playbackStatus} variant={playbackVariant(track.playbackStatus)} />
                 <Badge label={track.isPublished ? 'Опубл.' : 'Черн.'} variant={track.isPublished ? 'green' : 'gray'} />
               </div>

@@ -59,6 +59,7 @@ export interface AdminArtistSummary {
   isVerified: boolean
   isPublished: boolean
   trackCount: number
+  coverUrl?: string | null
 }
 
 export interface AdminArtistsPage {

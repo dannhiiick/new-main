@@ -109,24 +109,28 @@ function TrackRow({ track, selected, onToggle, onAction, actionLoading }: TrackR
   const isThisLoading = actionLoading === track.id
 
   return (
-    <tr className="border-b border-border-default hover:bg-surface-2/50 transition-colors">
+    <tr className="border-b border-[#1C1C1F] hover:bg-[#202024]/30 transition-all duration-150">
       <td className="px-3 py-3 w-10">
         <input
           type="checkbox"
           checked={selected}
           onChange={onToggle}
-          className="w-4 h-4 rounded border-zinc-600 bg-surface-2 accent-[var(--color-accent,#00ff87)] cursor-pointer"
+          className="w-4 h-4 rounded border-zinc-700 bg-[#202024] accent-white cursor-pointer"
         />
       </td>
       <td className="px-4 py-3 w-14">
         {track.coverUrl ? (
-          <img src={track.coverUrl} alt={track.title} className="w-10 h-10 rounded object-cover" />
+          <img src={track.coverUrl} alt={track.title} className="w-10 h-10 rounded-lg object-cover" />
         ) : (
-          <div className="w-10 h-10 rounded bg-surface-2 flex items-center justify-center text-zinc-700 text-lg">♪</div>
+          <div className="w-10 h-10 rounded-lg bg-[#202024] flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-zinc-600">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 0v15m0-15l-10.5 3M9 9V21m0-12a3 3 0 100-6 3 3 0 000 6zm10.5-3a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+          </div>
         )}
       </td>
       <td className="px-4 py-3 min-w-[200px]">
-        <Link to={`/catalog/${track.id}`} className="text-white text-sm font-medium hover:text-accent transition-colors line-clamp-1">
+        <Link to={`/catalog/${track.id}`} className="text-white text-sm font-medium hover:text-[#D4D1CA] transition-colors line-clamp-1">
           {track.title}
         </Link>
         <p className="text-zinc-500 text-xs mt-0.5 line-clamp-1">{artistNames || '—'}</p>
@@ -161,7 +165,11 @@ function TrackRow({ track, selected, onToggle, onAction, actionLoading }: TrackR
             </Button>
           )}
           <Link to={`/catalog/${track.id}`}>
-            <Button variant="secondary" size="sm">→</Button>
+            <Button variant="secondary" size="sm" className="w-8 h-8 !p-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </Button>
           </Link>
         </div>
       </td>
@@ -463,12 +471,12 @@ export function CatalogList(): React.ReactElement {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-default bg-surface-2/50">
+              <tr className="border-b border-[#1C1C1F] bg-[#141416]/50">
                 <th className="px-3 py-3 w-10">
                   <input type="checkbox" checked={allVisibleSelected}
                     ref={el => { if (el) el.indeterminate = someSelected }}
                     onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-zinc-600 bg-surface-2 accent-[var(--color-accent,#00ff87)] cursor-pointer" />
+                    className="w-4 h-4 rounded border-zinc-700 bg-[#202024] accent-white cursor-pointer" />
                 </th>
                 <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider w-14"></th>
                 <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Трек</th>

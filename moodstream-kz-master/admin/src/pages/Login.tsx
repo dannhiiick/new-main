@@ -41,29 +41,29 @@ export function Login(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#09090B] flex items-center justify-center px-4 font-sans">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-lg shadow-accent/20">
-            <span className="text-black font-bold text-xl">M</span>
-          </div>
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-[#D4D1CA] shrink-0">
+            <path d="M4 12L4 12.01M8 8L8 16M12 4L12 20M16 8L16 16M20 12L20 12.01" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <div>
-            <h1 className="text-white font-bold text-xl leading-none">MoodStream</h1>
-            <p className="text-zinc-500 text-xs mt-0.5">Admin Panel</p>
+            <h1 className="text-white font-semibold text-lg leading-none tracking-wide">MoodStream</h1>
+            <p className="text-zinc-500 text-[10px] uppercase tracking-widest mt-1.5 font-semibold">Admin Panel</p>
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-surface border border-border-default rounded-xl p-6">
-          <form onSubmit={e => void handleLogin(e)} className="space-y-4">
+        <div className="bg-[#141416] rounded-2xl p-8 shadow-xl shadow-black/30 border border-[#1C1C1F]/40">
+          <form onSubmit={e => void handleLogin(e)} className="space-y-5">
             <div>
-              <h2 className="text-white font-semibold text-lg">Вход</h2>
-              <p className="text-zinc-500 text-sm mt-1">Введите email и пароль администратора</p>
+              <h2 className="text-white font-semibold text-base uppercase tracking-wide">Вход</h2>
+              <p className="text-zinc-500 text-xs mt-1">Введите email и пароль администратора</p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-zinc-400 text-xs font-medium uppercase tracking-wide">
+              <label className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">
                 Email
               </label>
               <input
@@ -71,7 +71,7 @@ export function Login(): React.ReactElement {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@example.com"
-                className="w-full bg-surface-2 border border-border-default rounded-md px-3 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-[#202024] border border-[#1C1C1F] rounded-lg px-3.5 py-2.5 text-white placeholder-zinc-700 text-sm focus:outline-none focus:border-[#D4D1CA]/80 focus:ring-1 focus:ring-[#D4D1CA]/80 transition-all duration-200"
                 autoComplete="email"
                 autoFocus
                 required
@@ -79,7 +79,7 @@ export function Login(): React.ReactElement {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-zinc-400 text-xs font-medium uppercase tracking-wide">
+              <label className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">
                 Пароль
               </label>
               <input
@@ -87,25 +87,25 @@ export function Login(): React.ReactElement {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-surface-2 border border-border-default rounded-md px-3 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-[#202024] border border-[#1C1C1F] rounded-lg px-3.5 py-2.5 text-white placeholder-zinc-700 text-sm focus:outline-none focus:border-[#D4D1CA]/80 focus:ring-1 focus:ring-[#D4D1CA]/80 transition-all duration-200"
                 autoComplete="current-password"
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-900/30 border border-red-800/50 rounded-md px-3 py-2 text-red-400 text-sm">
+              <div className="bg-red-950/20 border border-red-950/60 rounded-lg px-4 py-3 text-red-400 text-xs">
                 {error}
               </div>
             )}
 
-            <Button type="submit" variant="primary" className="w-full" loading={loading}>
+            <Button type="submit" variant="primary" className="w-full" size="md" loading={loading}>
               Войти
             </Button>
           </form>
         </div>
 
-        <p className="text-center text-zinc-700 text-xs mt-6">MoodStream KZ Admin v1.0</p>
+        <p className="text-center text-zinc-700 text-[10px] uppercase tracking-widest mt-8 font-semibold">MoodStream KZ Admin v1.0</p>
       </div>
     </div>
   )

@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        accent: '#1DB954',
-        surface: '#161616',
-        'surface-2': '#1e1e1e',
-        'border-default': '#2a2a2a',
+        accent: '#D4D1CA',
+        surface: '#141416',
+        'surface-2': '#202024',
+        'border-default': '#1C1C1F',
       }
     }
   },

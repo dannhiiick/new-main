@@ -8,17 +8,17 @@ export interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  green: 'bg-green-900/40 text-green-400 border border-green-800/50',
-  yellow: 'bg-yellow-900/40 text-yellow-400 border border-yellow-800/50',
-  red: 'bg-red-900/40 text-red-400 border border-red-800/50',
-  gray: 'bg-zinc-800 text-zinc-400 border border-zinc-700',
-  blue: 'bg-blue-900/40 text-blue-400 border border-blue-800/50',
+  green: 'bg-green-950/30 text-green-300',
+  yellow: 'bg-yellow-950/30 text-yellow-300',
+  red: 'bg-red-950/30 text-red-300',
+  gray: 'bg-[#202024] text-zinc-400',
+  blue: 'bg-blue-950/30 text-blue-300',
 }
 
 export function Badge({ label, variant }: BadgeProps): React.ReactElement {
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${variantClasses[variant]}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium tracking-wide ${variantClasses[variant]}`}
     >
       {label}
     </span>

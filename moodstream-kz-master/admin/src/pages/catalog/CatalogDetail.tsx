@@ -81,7 +81,11 @@ function InlineEdit({ value, onSave, placeholder, className }: InlineEditProps):
       title="Нажмите чтобы редактировать"
     >
       {value || <span className="text-zinc-600">{placeholder ?? '—'}</span>}
-      <span className="opacity-0 group-hover:opacity-100 text-zinc-600 text-xs transition-opacity">✎</span>
+      <span className="opacity-0 group-hover:opacity-100 text-zinc-500 transition-opacity">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 20.013a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+        </svg>
+      </span>
     </span>
   )
 }
@@ -129,8 +133,8 @@ function DetailSkeleton(): React.ReactElement {
 interface SectionProps { title: string; children: React.ReactNode }
 function Section({ title, children }: SectionProps): React.ReactElement {
   return (
-    <div className="bg-surface border border-border-default rounded-xl p-6">
-      <h2 className="text-zinc-400 text-xs uppercase tracking-widest font-semibold mb-4">{title}</h2>
+    <div className="bg-[#141416] rounded-2xl p-6 shadow-sm border border-[#1C1C1F]/30">
+      <h2 className="text-zinc-500 text-[10px] uppercase tracking-widest font-semibold mb-4">{title}</h2>
       {children}
     </div>
   )
@@ -139,9 +143,9 @@ function Section({ title, children }: SectionProps): React.ReactElement {
 interface FieldProps { label: string; value: React.ReactNode }
 function Field({ label, value }: FieldProps): React.ReactElement {
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-border-default last:border-0">
+    <div className="flex items-start justify-between gap-4 py-3 border-b border-[#1C1C1F]/50 last:border-0">
       <span className="text-zinc-500 text-sm shrink-0">{label}</span>
-      <span className="text-white text-sm text-right">{value ?? <span className="text-zinc-700">—</span>}</span>
+      <span className="text-white text-sm text-right font-medium">{value ?? <span className="text-zinc-700">—</span>}</span>
     </div>
   )
 }
@@ -266,7 +270,14 @@ export function CatalogDetail(): React.ReactElement {
         </p>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => void refetch()}>Повторить</Button>
-          <Link to="/catalog"><Button variant="ghost">← Назад</Button></Link>
+          <Link to="/catalog">
+            <Button variant="ghost" className="flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Назад
+            </Button>
+          </Link>
         </div>
       </div>
     )
@@ -278,18 +289,25 @@ export function CatalogDetail(): React.ReactElement {
   return (
     <div className="space-y-4 max-w-4xl">
       {/* Back */}
-      <Link to="/catalog" className="inline-flex items-center gap-1.5 text-zinc-500 text-sm hover:text-white transition-colors">
-        ← Каталог треков
+      <Link to="/catalog" className="inline-flex items-center gap-2 text-zinc-500 text-sm hover:text-white transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        Каталог треков
       </Link>
 
       {/* Hero card */}
-      <div className="bg-surface border border-border-default rounded-xl p-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-[#1C1C1F]/40 shadow-lg">
         <div className="flex gap-6 items-start">
           {/* Cover */}
           {track.coverUrl ? (
-            <img src={track.coverUrl} alt={effectiveTitle} className="w-32 h-32 rounded-lg object-cover shrink-0 shadow-lg" />
+            <img src={track.coverUrl} alt={effectiveTitle} className="w-32 h-32 rounded-xl object-cover shrink-0 shadow-lg" />
           ) : (
-            <div className="w-32 h-32 rounded-lg bg-surface-2 flex items-center justify-center text-zinc-700 text-4xl shrink-0">♪</div>
+            <div className="w-32 h-32 rounded-xl bg-[#202024] flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-zinc-600">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 0v15m0-15l-10.5 3M9 9V21m0-12a3 3 0 100-6 3 3 0 000 6zm10.5-3a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
+            </div>
           )}
 
           {/* Info */}
@@ -327,17 +345,21 @@ export function CatalogDetail(): React.ReactElement {
                   variant="secondary"
                   loading={actionLoading === 'playback'}
                   onClick={() => setPlaybackSelectOpen(o => !o)}
+                  className="flex items-center gap-1.5"
                 >
-                  Playback: {effectivePlayback} ▾
+                  Playback: {effectivePlayback}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5 text-zinc-500">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
                 </Button>
                 {playbackSelectOpen && (
-                  <div className="absolute top-full left-0 mt-1 z-20 bg-surface border border-border-default rounded-lg overflow-hidden shadow-xl min-w-[160px]">
+                  <div className="absolute top-full left-0 mt-1.5 z-20 bg-[#141416] border border-[#1C1C1F] rounded-lg overflow-hidden shadow-xl min-w-[160px]">
                     {PLAYBACK_STATUSES.map(s => (
                       <button
                         key={s}
                         onClick={() => void handleSetPlayback(s)}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-surface-2 ${
-                          s === effectivePlayback ? 'text-accent font-medium' : 'text-white'
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-[#202024] ${
+                          s === effectivePlayback ? 'text-white font-medium bg-[#202024]/40' : 'text-zinc-400'
                         }`}
                       >
                         {s}
@@ -359,9 +381,9 @@ export function CatalogDetail(): React.ReactElement {
           <Field label="Источник" value={track.sourcePolicy || '—'} />
 
           {/* Editable genre */}
-          <div className="flex items-start justify-between gap-4 py-2.5 border-b border-border-default">
+          <div className="flex items-start justify-between gap-4 py-3 border-b border-[#1C1C1F]/50">
             <span className="text-zinc-500 text-sm shrink-0">Жанр</span>
-            <span className="text-white text-sm text-right">
+            <span className="text-white text-sm text-right font-medium">
               <InlineEdit
                 value={effectiveGenre ?? ''}
                 onSave={handleSaveGenre}
@@ -371,16 +393,16 @@ export function CatalogDetail(): React.ReactElement {
           </div>
 
           {/* isLocal toggle */}
-          <div className="flex items-center justify-between gap-4 py-2.5 border-b border-border-default">
+          <div className="flex items-center justify-between gap-4 py-3 border-b border-[#1C1C1F]/50">
             <span className="text-zinc-500 text-sm shrink-0">Локальный (KZ)</span>
             <button
               onClick={() => void handleToggleIsLocal()}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                effectiveIsLocal ? 'bg-accent' : 'bg-zinc-700'
+                effectiveIsLocal ? 'bg-white' : 'bg-[#202024]'
               }`}
             >
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                effectiveIsLocal ? 'translate-x-4' : 'translate-x-1'
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full transition-transform ${
+                effectiveIsLocal ? 'translate-x-4 bg-black' : 'translate-x-1 bg-zinc-500'
               }`} />
             </button>
           </div>

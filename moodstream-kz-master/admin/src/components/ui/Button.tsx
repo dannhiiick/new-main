@@ -12,18 +12,18 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent text-black hover:bg-[#1ed760] disabled:bg-accent/40 disabled:text-black/40 font-semibold',
+    'bg-white text-black hover:bg-[#E5E5E7] active:bg-[#C8C8CA] disabled:bg-white/40 disabled:text-black/40 font-medium shadow-sm',
   secondary:
-    'bg-[#2a2a2a] text-white hover:bg-[#333] disabled:bg-[#1e1e1e] disabled:text-zinc-600 border border-[#3a3a3a]',
+    'bg-[#202024] text-white hover:bg-[#2C2C32] active:bg-[#18181C] disabled:bg-[#141416] disabled:text-zinc-600',
   danger:
-    'bg-red-700 text-white hover:bg-red-600 disabled:bg-red-900/40 disabled:text-red-400',
+    'bg-red-950/40 text-red-400 hover:bg-red-900/35 active:bg-red-950/60 disabled:bg-red-950/10 disabled:text-red-900/50',
   ghost:
-    'bg-transparent text-zinc-400 hover:text-white hover:bg-white/5 disabled:text-zinc-600',
+    'bg-transparent text-zinc-400 hover:text-white hover:bg-[#202024]/50 disabled:text-zinc-600',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs rounded',
-  md: 'px-4 py-2 text-sm rounded-md',
+  sm: 'px-3 py-1.5 text-xs rounded-md',
+  md: 'px-4 py-2.5 text-sm rounded-lg',
 }
 
 export function Button({
@@ -38,8 +38,8 @@ export function Button({
   return (
     <button
       className={`
-        inline-flex items-center justify-center gap-2 transition-colors duration-150
-        focus:outline-none focus:ring-2 focus:ring-accent/50
+        inline-flex items-center justify-center gap-2 transition-all duration-150
+        focus:outline-none focus:ring-2 focus:ring-[#D4D1CA]/30
         cursor-pointer disabled:cursor-not-allowed
         ${variantClasses[variant]}
         ${sizeClasses[size]}

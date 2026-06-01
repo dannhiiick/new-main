@@ -94,17 +94,24 @@ function RoleSelect({
 
   return (
     <div className="flex flex-col gap-0.5">
-      <select
-        value={localRole}
-        onChange={handleChange}
-        disabled={mutation.isPending}
-        className="bg-surface-2 border border-border-default rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {ROLES.map(r => (
-          <option key={r} value={r}>{r}</option>
-        ))}
-      </select>
-      {error && <span className="text-red-400 text-xs">{error}</span>}
+      <div className="relative inline-block w-full min-w-[130px]">
+        <select
+          value={localRole}
+          onChange={handleChange}
+          disabled={mutation.isPending}
+          className="w-full appearance-none bg-surface-2 hover:bg-[#2C2C32] text-white text-xs rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          {ROLES.map(r => (
+            <option key={r} value={r} className="bg-surface">{r}</option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-zinc-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </div>
+      </div>
+      {error && <span className="text-red-400 text-[10px] mt-0.5">{error}</span>}
     </div>
   )
 }
@@ -130,19 +137,16 @@ function BanButton({ userId, isBanned }: { userId: string; isBanned: boolean }):
 
   return (
     <div className="flex flex-col gap-0.5">
-      <button
+      <Button
+        variant={isBanned ? 'secondary' : 'danger'}
+        size="sm"
         onClick={() => mutation.mutate(!isBanned)}
-        disabled={mutation.isPending}
-        className={[
-          'px-2.5 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
-          isBanned
-            ? 'bg-green-900/40 text-green-400 hover:bg-green-900/60 border border-green-800'
-            : 'bg-red-900/40 text-red-400 hover:bg-red-900/60 border border-red-800',
-        ].join(' ')}
+        loading={mutation.isPending}
+        className="whitespace-nowrap"
       >
-        {mutation.isPending ? '...' : isBanned ? 'Разбанить' : 'Заблокировать'}
-      </button>
-      {error && <span className="text-red-400 text-xs">{error}</span>}
+        {isBanned ? 'Разбанить' : 'Блокировать'}
+      </Button>
+      {error && <span className="text-red-400 text-[10px] mt-0.5">{error}</span>}
     </div>
   )
 }
@@ -151,16 +155,14 @@ function UserRow({ user }: { user: AdminUserSummary }): React.ReactElement {
   const contact = user.email ?? user.phone ?? '—'
   return (
     <tr className={[
-      'border-b border-border-default hover:bg-surface-2/50 transition-colors',
+      'border-b border-border-default/45 hover:bg-surface-2/30 transition-all duration-150',
       user.isBanned ? 'opacity-60' : '',
     ].join(' ')}>
       <td className="px-4 py-3 min-w-[200px]">
         <div className="flex items-center gap-2">
           <p className="text-white text-sm font-medium">{user.displayName}</p>
           {user.isBanned && (
-            <span className="text-xs bg-red-900/50 text-red-400 border border-red-800 px-1.5 py-0.5 rounded">
-              бан
-            </span>
+            <Badge variant="red" label="бан" />
           )}
         </div>
         <p className="text-zinc-500 text-xs mt-0.5">{contact}</p>
@@ -224,7 +226,7 @@ export function UsersPage(): React.ReactElement {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-white text-xl font-bold">Пользователи</h1>
+          <h1 className="text-white text-xl font-bold tracking-tight">Пользователи</h1>
           <p className="text-zinc-500 text-sm mt-0.5">
             Все зарегистрированные пользователи
             {data?.total != null ? ` · всего ${data.total}` : ''}
@@ -233,17 +235,24 @@ export function UsersPage(): React.ReactElement {
       </div>
 
       {/* Search */}
-      <div className="bg-surface border border-border-default rounded-xl p-4">
+      <div className="bg-surface rounded-2xl p-5 shadow-sm">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-zinc-500 text-xs uppercase tracking-wide mb-1.5 block">Поиск</label>
-            <input
-              type="text"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              placeholder="Имя, email или телефон..."
-              className="w-full bg-surface-2 border border-border-default rounded-md px-3 py-2 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-accent transition-colors"
-            />
+            <label className="text-zinc-500 text-xs uppercase tracking-wider mb-1.5 block">Поиск</label>
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-zinc-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Имя, email или телефон..."
+                className="w-full bg-surface-2 rounded-lg pl-9 pr-4 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:ring-1 focus:ring-accent/40 border-none transition-all duration-150"
+              />
+            </div>
           </div>
           {searchInput && (
             <Button variant="ghost" size="md" onClick={() => { setSearchInput(''); setAllUsers([]); setCursor(null) }}>
@@ -259,18 +268,18 @@ export function UsersPage(): React.ReactElement {
       </div>
 
       {/* Table */}
-      <div className="bg-surface border border-border-default rounded-xl overflow-hidden">
+      <div className="bg-surface rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-default bg-surface-2/50">
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Пользователь</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Роль</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Язык</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider whitespace-nowrap">Дата рег.</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Изменить роль</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Блокировка</th>
+              <tr className="border-b border-border-default/45 bg-[#141416]/50">
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Пользователь</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">ID</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Роль</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Язык</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold whitespace-nowrap">Дата рег.</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Изменить роль</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Блокировка</th>
               </tr>
             </thead>
 
@@ -310,7 +319,7 @@ export function UsersPage(): React.ReactElement {
         </div>
 
         {data?.nextCursor && (
-          <div className="px-4 py-4 border-t border-border-default flex items-center justify-center">
+          <div className="px-4 py-4 border-t border-border-default/45 flex items-center justify-center">
             <Button variant="secondary" onClick={() => setCursor(data.nextCursor ?? null)} loading={isLoading}>
               Загрузить ещё
             </Button>

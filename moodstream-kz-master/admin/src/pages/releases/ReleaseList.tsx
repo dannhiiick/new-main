@@ -29,16 +29,16 @@ function ReleaseSkeleton(): React.ReactElement {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 px-4 py-3 bg-surface border border-border-default rounded-lg"
+          className="flex items-center gap-4 px-4 py-3.5 bg-[#141416] rounded-xl"
         >
-          <div className="w-12 h-12 rounded-md bg-surface-2 animate-pulse shrink-0" />
+          <div className="w-12 h-12 rounded-lg bg-[#202024] animate-pulse shrink-0" />
           <div className="space-y-1.5 flex-1">
-            <div className="h-3.5 w-44 bg-surface-2 rounded animate-pulse" />
-            <div className="h-3 w-28 bg-surface-2 rounded animate-pulse" />
+            <div className="h-3.5 w-44 bg-[#202024] rounded animate-pulse" />
+            <div className="h-3 w-28 bg-[#202024] rounded animate-pulse" />
           </div>
           <div className="flex gap-2">
-            <div className="h-5 w-14 bg-surface-2 rounded animate-pulse" />
-            <div className="h-5 w-20 bg-surface-2 rounded animate-pulse" />
+            <div className="h-5 w-14 bg-[#202024] rounded animate-pulse" />
+            <div className="h-5 w-20 bg-[#202024] rounded animate-pulse" />
           </div>
         </div>
       ))}
@@ -51,24 +51,31 @@ function ReleaseRow({ release }: { release: AdminReleaseSummary }): React.ReactE
 
   return (
     <Link to={`/releases/${release.id}`}
-      className="flex items-center gap-4 px-4 py-3 bg-surface border border-border-default rounded-lg hover:border-zinc-600 hover:bg-surface-2/30 transition-colors">
+      className="flex items-center gap-4 px-5 py-3.5 bg-[#141416] rounded-xl hover:bg-[#202024] transition-all duration-150 border border-transparent hover:border-[#1C1C1F]/20">
       {release.coverUrl ? (
-        <img src={release.coverUrl} alt={release.title} className="w-12 h-12 rounded-md object-cover shrink-0" />
+        <img src={release.coverUrl} alt={release.title} className="w-12 h-12 rounded-lg object-cover shrink-0 shadow-sm" />
       ) : (
-        <div className="w-12 h-12 rounded-md bg-surface-2 flex items-center justify-center text-zinc-600 text-xl shrink-0">💿</div>
+        <div className="w-12 h-12 rounded-lg bg-[#202024] flex items-center justify-center shrink-0 border border-[#2C2C32]">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-zinc-500">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </div>
       )}
 
       <div className="flex-1 min-w-0">
         <p className="text-white text-sm font-medium truncate">{release.title}</p>
-        <p className="text-zinc-500 text-xs truncate">{release.artistName || '—'}</p>
+        <p className="text-zinc-500 text-xs truncate mt-0.5">{release.artistName || '—'}</p>
       </div>
 
-      <div className="text-zinc-500 text-xs shrink-0 mr-2">{release.trackCount} тр.</div>
+      <div className="text-zinc-500 text-xs shrink-0 mr-2 font-medium">{release.trackCount} треков</div>
 
       <div className="flex items-center gap-2 shrink-0">
         <Badge label={typeLabel} variant="blue" />
         <Badge label={release.isPublished ? 'Опубликован' : 'Черновик'} variant={release.isPublished ? 'green' : 'gray'} />
-        <span className="text-zinc-600 text-xs ml-1">→</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-zinc-500 ml-1">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
       </div>
     </Link>
   )
@@ -123,16 +130,16 @@ export function ReleaseList(): React.ReactElement {
       </div>
 
       {/* Search */}
-      <div className="bg-surface border border-border-default rounded-xl p-4">
+      <div className="bg-[#141416] rounded-2xl p-5 border border-[#1C1C1F]/40 shadow-sm">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-zinc-500 text-xs uppercase tracking-wide mb-1.5 block">Поиск</label>
+            <label className="text-zinc-500 text-xs uppercase tracking-wide mb-1.5 block font-semibold">Поиск</label>
             <input
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Название релиза..."
-              className="w-full bg-surface-2 border border-border-default rounded-md px-3 py-2 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-accent transition-colors"
+              className="w-full bg-[#202024] border border-[#1C1C1F] rounded-lg px-3.5 py-2.5 text-white placeholder-zinc-700 text-sm focus:outline-none focus:border-[#D4D1CA]/80 focus:ring-1 focus:ring-[#D4D1CA]/80 transition-all duration-200"
             />
           </div>
           {searchInput && (
@@ -141,7 +148,7 @@ export function ReleaseList(): React.ReactElement {
             </Button>
           )}
         </div>
-        <div className="mt-3 text-zinc-500 text-xs">
+        <div className="mt-3 text-zinc-500 text-xs font-medium">
           {isLoading && allReleases.length === 0 ? 'Загрузка...' : `Показано: ${allReleases.length}`}
         </div>
       </div>

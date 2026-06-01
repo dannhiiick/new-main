@@ -89,56 +89,70 @@ export function FeedbackPage(): React.ReactElement {
       </div>
 
       {/* Filters */}
-      <div className="bg-surface border border-border-default rounded-xl p-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="min-w-[160px]">
-            <label className="text-zinc-500 text-xs uppercase tracking-wide mb-1.5 block">Статус</label>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="w-full bg-surface-2 border border-border-default rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
-            >
-              <option value="">Все</option>
-              {STATUS_OPTIONS.filter(Boolean).map(s => (
-                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-              ))}
-            </select>
+      <div className="bg-surface rounded-2xl p-5 shadow-sm">
+        <div className="flex flex-wrap gap-4">
+          <div className="min-w-[180px]">
+            <label className="text-zinc-500 text-xs uppercase tracking-wider mb-1.5 block">Статус</label>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="w-full appearance-none bg-surface-2 text-white text-sm rounded-lg px-4 py-2.5 pr-10 focus:outline-none focus:ring-1 focus:ring-accent/40 border-none transition-all duration-150 cursor-pointer shadow-sm"
+              >
+                <option value="" className="bg-[#141416]">Все статусы</option>
+                {STATUS_OPTIONS.filter(Boolean).map(s => (
+                  <option key={s} value={s} className="bg-[#141416]">{STATUS_LABELS[s]}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-500">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="min-w-[160px]">
-            <label className="text-zinc-500 text-xs uppercase tracking-wide mb-1.5 block">Категория</label>
-            <select
-              value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-              className="w-full bg-surface-2 border border-border-default rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:border-accent"
-            >
-              <option value="">Все</option>
-              {CATEGORY_OPTIONS.filter(Boolean).map(c => (
-                <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
-              ))}
-            </select>
+          <div className="min-w-[180px]">
+            <label className="text-zinc-500 text-xs uppercase tracking-wider mb-1.5 block">Категория</label>
+            <div className="relative">
+              <select
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+                className="w-full appearance-none bg-surface-2 text-white text-sm rounded-lg px-4 py-2.5 pr-10 focus:outline-none focus:ring-1 focus:ring-accent/40 border-none transition-all duration-150 cursor-pointer shadow-sm"
+              >
+                <option value="" className="bg-[#141416]">Все категории</option>
+                {CATEGORY_OPTIONS.filter(Boolean).map(c => (
+                  <option key={c} value={c} className="bg-[#141416]">{CATEGORY_LABELS[c]}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-zinc-500">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-surface border border-border-default rounded-xl overflow-hidden">
+      <div className="bg-surface rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-default bg-surface-2/50">
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Пользователь</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Категория</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Сообщение</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Платформа</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Дата</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Статус</th>
-                <th className="px-4 py-3 text-left text-zinc-500 text-xs uppercase tracking-wider">Действие</th>
+              <tr className="border-b border-border-default/45 bg-[#141416]/50">
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Пользователь</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Категория</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Сообщение</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Платформа</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Дата</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Статус</th>
+                <th className="px-4 py-3.5 text-left text-zinc-500 text-xs uppercase tracking-wider font-semibold">Действие</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border-default">
+                  <tr key={i} className="border-b border-border-default/45">
                     {Array.from({ length: 7 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-surface-2 rounded animate-pulse" />
@@ -163,10 +177,10 @@ export function FeedbackPage(): React.ReactElement {
                 </tr>
               ) : (
                 data!.items.map((item: FeedbackItem) => (
-                  <tr key={item.id} className="border-b border-border-default hover:bg-surface-2/30 transition-colors">
+                  <tr key={item.id} className="border-b border-border-default/45 hover:bg-surface-2/30 transition-all duration-150">
                     <td className="px-4 py-3">
-                      <p className="text-white text-sm">{item.user?.displayName ?? 'Анонимно'}</p>
-                      {item.user?.email && <p className="text-zinc-500 text-xs">{item.user.email}</p>}
+                      <p className="text-white text-sm font-medium">{item.user?.displayName ?? 'Анонимно'}</p>
+                      {item.user?.email && <p className="text-zinc-500 text-xs mt-0.5">{item.user.email}</p>}
                     </td>
                     <td className="px-4 py-3">
                       <Badge label={CATEGORY_LABELS[item.category] ?? item.category} variant={categoryVariant(item.category)} />
@@ -182,16 +196,23 @@ export function FeedbackPage(): React.ReactElement {
                       <Badge label={STATUS_LABELS[item.status] ?? item.status} variant={statusVariant(item.status)} />
                     </td>
                     <td className="px-4 py-3">
-                      <select
-                        value={item.status}
-                        disabled={updatingId === item.id}
-                        onChange={e => void updateStatus(item.id, e.target.value)}
-                        className="bg-surface-2 border border-border-default rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-accent disabled:opacity-50"
-                      >
-                        {STATUS_OPTIONS.filter(Boolean).map(s => (
-                          <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                        ))}
-                      </select>
+                      <div className="relative inline-block w-full min-w-[120px]">
+                        <select
+                          value={item.status}
+                          disabled={updatingId === item.id}
+                          onChange={e => void updateStatus(item.id, e.target.value)}
+                          className="w-full appearance-none bg-surface-2 hover:bg-[#2C2C32] text-white text-xs rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        >
+                          {STATUS_OPTIONS.filter(Boolean).map(s => (
+                            <option key={s} value={s} className="bg-surface">{STATUS_LABELS[s]}</option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-zinc-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ))
