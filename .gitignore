@@ -13,3 +13,8 @@ backend/data/
 *.aac
 *.m4a
 *.ogg
+
+# Backups and local test envs
+front_backup/
+.venv_render_test/
+
