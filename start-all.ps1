@@ -3,14 +3,19 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backendDir = Join-Path $root "backend"
 $frontDir = Join-Path $root "front"
-$python = Join-Path $root "venv\Scripts\python.exe"
+
+$venvDir = Join-Path $root "venv"
+if (-not (Test-Path $venvDir) -and (Test-Path (Join-Path $root ".venv_render_test"))) {
+  $venvDir = Join-Path $root ".venv_render_test"
+}
+$python = Join-Path $venvDir "Scripts\python.exe"
 
 if (-not (Test-Path $python)) {
   Write-Host "Creating Python venv..."
-  python -m venv (Join-Path $root "venv")
+  python -m venv $venvDir
 }
 
-if (-not (Test-Path (Join-Path $root "venv\Lib\site-packages\django"))) {
+if (-not (Test-Path (Join-Path $venvDir "Lib\site-packages\django"))) {
   Write-Host "Installing backend dependencies..."
   & $python -m pip install -r (Join-Path $backendDir "requirements.txt")
 }
