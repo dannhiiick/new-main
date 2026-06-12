@@ -19,7 +19,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  // Do not send Authorization header for login and register requests to prevent DRF rejecting them due to expired old tokens
+  if (token && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
   let res = await fetch(`${BASE}${path}`, { ...options, headers });
 

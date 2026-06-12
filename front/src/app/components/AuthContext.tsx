@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(me);
     } catch {
       setUser(null);
+      // Clear invalid tokens from localStorage so the user is cleanly logged out
+      api.auth.logout();
     }
   };
 
