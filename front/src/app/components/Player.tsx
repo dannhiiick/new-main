@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat } from 'lucide-react';
-import type { Track } from './api';
+import { api, type Track } from './api';
 import { useLibrary } from './libraryStore';
 
 interface PlayerProps {
@@ -24,14 +24,32 @@ export function Player({ currentTrack }: PlayerProps) {
   const hasAudio = Boolean(currentTrack?.audioUrl);
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  const getAudioSource = () => {
+    if (!currentTrack?.audioUrl) return undefined;
+    
+    // If it's a full URL that's not local, use it as is
+    if (currentTrack.audioUrl.startsWith('http') && !currentTrack.audioUrl.includes('localhost') && !currentTrack.audioUrl.includes('127.0.0.1')) {
+      return currentTrack.audioUrl;
+    }
+    
+    // Extract the filename (e.g. "/media/filename.wav" -> "filename.wav")
+    const parts = currentTrack.audioUrl.split('/');
+    const filename = parts[parts.length - 1];
+    
+    // Use the custom serving endpoint
+    return api.audioUrl(filename);
+  };
+
+  const audioSrc = getAudioSource();
+
   useEffect(() => {
     setCurrentTime(0);
     setDuration(currentTrack?.duration || 0);
-    if (!currentTrack?.audioUrl || !audioRef.current) { setPlaying(false); return; }
+    if (!audioSrc || !audioRef.current) { setPlaying(false); return; }
     const audio = audioRef.current;
     audio.load();
     audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-  }, [currentTrack]);
+  }, [currentTrack, audioSrc]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -64,7 +82,7 @@ export function Player({ currentTrack }: PlayerProps) {
     >
       <audio
         ref={audioRef}
-        src={currentTrack?.audioUrl}
+        src={audioSrc}
         onLoadedMetadata={e => setDuration(e.currentTarget.duration || currentTrack?.duration || 0)}
         onTimeUpdate={e => setCurrentTime(e.currentTarget.currentTime)}
         onPause={() => setPlaying(false)}
