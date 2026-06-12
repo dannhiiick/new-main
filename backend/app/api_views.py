@@ -61,14 +61,20 @@ def concerts_list(request):
 @authentication_classes([])
 @permission_classes([AllowAny])
 def music_file(request, filename):
-    music_root = Path(settings.MUSIC_ROOT).resolve()
-    file_path = (music_root / filename).resolve()
+    # Try looking in MEDIA_ROOT/music first (for uploaded files)
+    media_music_dir = Path(settings.MEDIA_ROOT).resolve() / "music"
+    file_path = (media_music_dir / filename).resolve()
+    
+    # If not found or outside directory, fallback to MUSIC_ROOT (pre-installed tracks)
+    if media_music_dir not in file_path.parents or not file_path.exists() or not file_path.is_file():
+        music_root = Path(settings.MUSIC_ROOT).resolve()
+        file_path = (music_root / filename).resolve()
 
-    if music_root not in file_path.parents and file_path != music_root:
-        raise Http404("Audio file not found")
+        if music_root not in file_path.parents and file_path != music_root:
+            raise Http404("Audio file not found")
 
-    if not file_path.exists() or not file_path.is_file():
-        raise Http404("Audio file not found")
+        if not file_path.exists() or not file_path.is_file():
+            raise Http404("Audio file not found")
 
     content_type, _ = mimetypes.guess_type(file_path.name)
     return FileResponse(
