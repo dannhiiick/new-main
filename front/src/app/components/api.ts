@@ -4,7 +4,7 @@ import {
 } from './mockData';
 
 const BASE = typeof window !== 'undefined' && window.location.port === '5173'
-  ? 'http://localhost:8002/api'
+  ? 'http://127.0.0.1:8002/api'
   : '/api';
 
 let _demoMode = false;
