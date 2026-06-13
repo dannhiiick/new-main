@@ -46,9 +46,12 @@ class TrackAdmin(admin.ModelAdmin):
     def audio_preview(self, obj):
         if not obj.audio_file:
             return "Файл не загружен"
+        import os
+        filename = os.path.basename(obj.audio_file.name)
+        preview_url = f"/api/media/music/{quote(filename)}"
         return format_html(
             '<audio controls preload="none" style="width: min(460px, 100%);" src="{}"></audio>',
-            obj.audio_file.url,
+            preview_url,
         )
 
 
