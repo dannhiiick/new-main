@@ -51,7 +51,7 @@ export function LibraryPage() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }} className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(({ icon: Icon, label, count, color }) => (
           <div key={label} className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}20` }}>
@@ -117,7 +117,7 @@ export function LibraryPage() {
           <h3 className="text-base font-semibold text-foreground mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             Подписки на артистов
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {followedArtists.map(a => (
               <div key={a.id} className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden"
@@ -139,7 +139,7 @@ export function LibraryPage() {
           <h3 className="text-base font-semibold text-foreground mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             Сохранённые плейлисты
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {savedPlaylists.map(p => (
               <div key={p.id} className="bg-card border border-border rounded-2xl overflow-hidden">
                 <div className="w-full h-32 flex items-center justify-center text-2xl font-bold text-white/80"

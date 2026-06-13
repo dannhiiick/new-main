@@ -68,7 +68,7 @@ export function ArtistsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Поиск артиста..."
-          className="w-full max-w-sm px-4 py-2.5 rounded-xl bg-input-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+          className="w-full px-4 py-2.5 rounded-xl bg-input-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
         />
       </div>
 
@@ -76,10 +76,10 @@ export function ArtistsPage() {
       {error && <div className="text-muted-foreground text-sm text-center py-12">{error}</div>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(a => <ArtistCard key={a.id} artist={a} />)}
           {filtered.length === 0 && (
-            <div className="col-span-3 text-center text-muted-foreground text-sm py-12">Артисты не найдены</div>
+            <div className="col-span-full text-center text-muted-foreground text-sm py-12">Артисты не найдены</div>
           )}
         </div>
       )}

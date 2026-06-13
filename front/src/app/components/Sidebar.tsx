@@ -21,15 +21,31 @@ const NAV = [
   { icon: HelpCircle, label: 'Помощь', path: '/help' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
   const [premiumOpen, setPremiumOpen] = useState(false);
 
   return (
-    <aside
-      style={{ fontFamily: "'Inter', sans-serif" }}
-      className="flex flex-col w-[220px] shrink-0 bg-sidebar border-r border-sidebar-border h-full overflow-y-auto"
-    >
+    <>
+      {/* Backdrop for mobile drawer */}
+      <div
+        onClick={onClose}
+        className={`fixed inset-0 bg-black/60 z-40 transition-opacity duration-300 md:hidden ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+
+      <aside
+        style={{ fontFamily: "'Inter', sans-serif" }}
+        className={`flex flex-col w-[220px] shrink-0 bg-sidebar border-r border-sidebar-border h-full overflow-y-auto fixed top-0 bottom-0 left-0 z-50 transition-transform duration-300 md:static md:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
       <div className="px-5 py-5 flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
           <Zap size={16} className="text-white fill-white" />
@@ -45,6 +61,7 @@ export function Sidebar() {
             key={path}
             to={path}
             end={path === '/'}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
                 isActive
@@ -82,6 +99,7 @@ export function Sidebar() {
         title="Premium-подписка скоро"
         description="Тарифы, оплата и эксклюзивные плейлисты для Premium-пользователей сейчас в разработке. Следите за обновлениями!"
       />
-    </aside>
+      </aside>
+    </>
   );
 }

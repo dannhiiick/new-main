@@ -28,7 +28,7 @@ export function GenresPage() {
       {loading && <div className="text-muted-foreground text-sm text-center py-12">Загрузка...</div>}
 
       {!loading && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {genres.map(([genre, count]) => (
             <div
               key={genre}
@@ -43,7 +43,7 @@ export function GenresPage() {
             </div>
           ))}
           {genres.length === 0 && (
-            <div className="col-span-3 text-center text-muted-foreground text-sm py-12">Жанры не найдены</div>
+            <div className="col-span-full text-center text-muted-foreground text-sm py-12">Жанры не найдены</div>
           )}
         </div>
       )}

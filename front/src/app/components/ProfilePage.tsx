@@ -9,7 +9,7 @@ export function ProfilePage() {
     <div style={{ fontFamily: "'Inter', sans-serif" }} className="flex-1 overflow-y-auto p-6">
       <div className="max-w-2xl">
         {/* Avatar + name */}
-        <div className="bg-card border border-border rounded-2xl p-8 mb-5 flex items-center gap-6">
+        <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 mb-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shrink-0"
             style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)' }}>
             {(user.displayName || user.username).slice(0, 2).toUpperCase()}
@@ -24,7 +24,7 @@ export function ProfilePage() {
         </div>
 
         {/* Info cards */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {user.email && (
             <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-3">
               <Mail size={18} className="text-primary shrink-0" />

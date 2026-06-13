@@ -122,7 +122,7 @@ export function SettingsPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 self-start"
+          className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 self-start"
         >
           {saving ? 'Сохранение...' : saved ? 'Сохранено ✓' : 'Сохранить настройки'}
         </button>

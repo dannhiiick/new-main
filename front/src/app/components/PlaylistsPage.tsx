@@ -28,7 +28,7 @@ export function PlaylistsPage() {
       {error && <div className="text-muted-foreground text-sm text-center py-12">{error}</div>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {(data ?? []).map((pl, i) => (
             <div key={pl.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all cursor-pointer group">
               <div
@@ -62,7 +62,7 @@ export function PlaylistsPage() {
             </div>
           ))}
           {(data ?? []).length === 0 && (
-            <div className="col-span-3 text-center text-muted-foreground text-sm py-12">Плейлисты не найдены</div>
+            <div className="col-span-full text-center text-muted-foreground text-sm py-12">Плейлисты не найдены</div>
           )}
         </div>
       )}

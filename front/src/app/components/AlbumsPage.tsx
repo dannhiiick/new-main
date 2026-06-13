@@ -26,7 +26,7 @@ export function AlbumsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Поиск альбома или артиста..."
-          className="w-full max-w-sm px-4 py-2.5 rounded-xl bg-input-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+          className="w-full px-4 py-2.5 rounded-xl bg-input-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
         />
       </div>
 
@@ -34,7 +34,7 @@ export function AlbumsPage() {
       {error && <div className="text-muted-foreground text-sm text-center py-12">{error}</div>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
           {filtered.map((album, i) => (
             <div key={album.id} className="bg-card border border-border rounded-2xl p-4 hover:border-primary/30 transition-all cursor-pointer group">
               <div
@@ -51,7 +51,7 @@ export function AlbumsPage() {
             </div>
           ))}
           {filtered.length === 0 && (
-            <div className="col-span-4 text-center text-muted-foreground text-sm py-12">Альбомы не найдены</div>
+            <div className="col-span-full text-center text-muted-foreground text-sm py-12">Альбомы не найдены</div>
           )}
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
-import { Bell, Settings, User, LogOut, Search } from 'lucide-react';
+import { Bell, Settings, User, LogOut, Search, Menu } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
@@ -19,7 +19,11 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/help': { title: 'Помощь', subtitle: 'Поддержка и документация' },
 };
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,19 +41,27 @@ export function Header() {
   return (
     <header
       style={{ fontFamily: "'Inter', sans-serif" }}
-      className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-20 shrink-0"
+      className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-20 shrink-0"
     >
-      <div>
-        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '1.25rem', letterSpacing: '-0.02em' }} className="text-foreground leading-tight">
-          {info.title}
-        </h1>
-        {info.subtitle && (
-          <p className="text-xs text-muted-foreground mt-0.5">{info.subtitle}</p>
-        )}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-1.5 rounded-xl hover:bg-secondary text-foreground shrink-0 transition-colors"
+        >
+          <Menu size={18} />
+        </button>
+        <div>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '1.15rem', letterSpacing: '-0.02em' }} className="text-foreground leading-tight md:text-xl">
+            {info.title}
+          </h1>
+          {info.subtitle && (
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 hidden sm:block">{info.subtitle}</p>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative">
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className="relative hidden sm:block">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             value={query}
@@ -82,7 +94,7 @@ export function Header() {
             <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
               <User size={12} className="text-primary" />
             </div>
-            <span className="text-sm text-foreground max-w-[100px] truncate">
+            <span className="text-sm text-foreground max-w-[100px] truncate hidden sm:inline">
               {user?.displayName || user?.username}
             </span>
           </button>

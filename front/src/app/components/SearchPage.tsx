@@ -59,7 +59,7 @@ export function SearchPage({ onPlayTrack }: SearchPageProps) {
           {artists.length > 0 && (
             <section>
               <h3 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Артисты</h3>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {artists.slice(0, 4).map(a => (
                   <div key={a.id} className="flex flex-col items-center gap-2 p-4 bg-card border border-border rounded-2xl hover:border-primary/30 transition-colors cursor-pointer">
                     <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white overflow-hidden"
@@ -94,7 +94,7 @@ export function SearchPage({ onPlayTrack }: SearchPageProps) {
                       <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
                       <p className="text-xs text-muted-foreground truncate">{t.artist}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground">{t.genre}</span>
+                    <span className="hidden sm:inline text-xs text-muted-foreground">{t.genre}</span>
                   </div>
                 ))}
               </div>
@@ -148,7 +148,7 @@ function SearchSuggestions({ onPick }: { onPick: (q: string) => void }) {
         <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>
           <Sparkles size={14} className="text-accent" /> Жанры для исследования
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {POPULAR_GENRES.map(g => (
             <button
               key={g.name}

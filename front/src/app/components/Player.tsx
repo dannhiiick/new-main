@@ -78,7 +78,7 @@ export function Player({ currentTrack }: PlayerProps) {
   return (
     <div
       style={{ fontFamily: "'Inter', sans-serif" }}
-      className="flex items-center justify-between px-6 h-[76px] bg-card border-t border-border shrink-0"
+      className="bg-card border-t border-border shrink-0"
     >
       <audio
         ref={audioRef}
@@ -90,83 +90,107 @@ export function Player({ currentTrack }: PlayerProps) {
         onEnded={() => { setPlaying(false); setCurrentTime(0); }}
       />
 
-      {/* Track info */}
-      <div className="flex items-center gap-3 w-[240px]">
-        <div className="w-11 h-11 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold text-white overflow-hidden"
-          style={{ background: currentTrack ? 'linear-gradient(135deg, #8B5CF6, #EC4899)' : '#1E1E30' }}>
-          {currentTrack?.coverUrl ? (
-            <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" />
-          ) : coverLabel}
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{currentTrack?.title || 'Выберите трек'}</p>
-          <p className="text-xs text-muted-foreground truncate">{currentTrack?.artist || '—'}</p>
-        </div>
-        <button
-          onClick={() => currentTrack && toggleLike(currentTrack)}
-          className={`ml-1 shrink-0 transition-colors ${liked ? 'text-accent' : 'text-muted-foreground hover:text-foreground'}`}
-        >
-          <Heart size={16} className={liked ? 'fill-accent' : ''} />
-        </button>
+      {/* Mobile top progress bar */}
+      <div className="sm:hidden h-0.5 bg-secondary cursor-pointer" onClick={seek}>
+        <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col items-center gap-1.5 flex-1 max-w-[480px]">
-        <div className="flex items-center gap-4">
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
-            <Shuffle size={15} />
+      <div className="flex items-center justify-between px-3 h-[64px] sm:h-[76px] sm:px-6">
+        {/* Track info */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 sm:w-[240px] sm:flex-none">
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold text-white overflow-hidden"
+            style={{ background: currentTrack ? 'linear-gradient(135deg, #8B5CF6, #EC4899)' : '#1E1E30' }}>
+            {currentTrack?.coverUrl ? (
+              <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" />
+            ) : coverLabel}
+          </div>
+          <div className="min-w-0 flex-1 sm:flex-none">
+            <p className="text-sm font-medium text-foreground truncate">{currentTrack?.title || 'Выберите трек'}</p>
+            <p className="text-xs text-muted-foreground truncate">{currentTrack?.artist || '—'}</p>
+          </div>
+          <button
+            onClick={() => currentTrack && toggleLike(currentTrack)}
+            className={`ml-1 shrink-0 transition-colors ${liked ? 'text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <Heart size={15} className={liked ? 'fill-accent' : ''} />
           </button>
+        </div>
+
+        {/* Mobile compact controls */}
+        <div className="flex sm:hidden items-center gap-2 ml-2 shrink-0">
           <button className="text-muted-foreground hover:text-foreground transition-colors">
-            <SkipBack size={18} />
+            <SkipBack size={16} />
           </button>
           <button
             onClick={toggle}
             disabled={!hasAudio}
-            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primary/90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primary/90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+            {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
           </button>
           <button className="text-muted-foreground hover:text-foreground transition-colors">
-            <SkipForward size={18} />
-          </button>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
-            <Repeat size={15} />
+            <SkipForward size={16} />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">{fmt(currentTime)}</span>
-          <div
-            className="flex-1 h-1 rounded-full bg-secondary cursor-pointer relative group"
-            onClick={seek}
-          >
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
-              style={{ left: `${progress}%` }}
-            />
+        {/* Desktop center controls */}
+        <div className="hidden sm:flex flex-col items-center gap-1.5 flex-1 max-w-[480px]">
+          <div className="flex items-center gap-4">
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <Shuffle size={15} />
+            </button>
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <SkipBack size={18} />
+            </button>
+            <button
+              onClick={toggle}
+              disabled={!hasAudio}
+              className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primary/90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+            </button>
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <SkipForward size={18} />
+            </button>
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <Repeat size={15} />
+            </button>
           </div>
-          <span className="text-[10px] text-muted-foreground w-8 tabular-nums">{fmt(duration)}</span>
-        </div>
-      </div>
 
-      {/* Volume */}
-      <div className="flex items-center gap-2 w-[200px] justify-end">
-        <button
-          onClick={() => setMuted(m => !m)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {muted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={muted ? 0 : volume}
-          onChange={e => { setVolume(Number(e.target.value)); setMuted(false); }}
-          className="w-24 h-1 accent-primary cursor-pointer"
-          style={{ accentColor: '#8B5CF6' }}
-        />
+          <div className="flex items-center gap-2 w-full">
+            <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">{fmt(currentTime)}</span>
+            <div
+              className="flex-1 h-1 rounded-full bg-secondary cursor-pointer relative group"
+              onClick={seek}
+            >
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
+                style={{ left: `${progress}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-muted-foreground w-8 tabular-nums">{fmt(duration)}</span>
+          </div>
+        </div>
+
+        {/* Volume (desktop only) */}
+        <div className="hidden sm:flex items-center gap-2 w-[200px] justify-end">
+          <button
+            onClick={() => setMuted(m => !m)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {muted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={muted ? 0 : volume}
+            onChange={e => { setVolume(Number(e.target.value)); setMuted(false); }}
+            className="w-24 h-1 accent-primary cursor-pointer"
+            style={{ accentColor: '#8B5CF6' }}
+          />
+        </div>
       </div>
     </div>
   );

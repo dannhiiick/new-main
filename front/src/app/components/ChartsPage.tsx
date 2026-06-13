@@ -52,8 +52,8 @@ export function ChartsPage({ onPlayTrack }: ChartsPageProps) {
                 <p className="text-sm font-medium text-foreground truncate">{track.title}</p>
                 <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
               </div>
-              <span className="text-sm text-muted-foreground">{track.genre || '—'}</span>
-              <span className="text-sm text-muted-foreground w-20 text-right">{track.plays?.toLocaleString() ?? '—'}</span>
+              <span className="hidden sm:inline text-sm text-muted-foreground">{track.genre || '—'}</span>
+              <span className="hidden md:inline text-sm text-muted-foreground w-20 text-right">{track.plays?.toLocaleString() ?? '—'}</span>
               <span className="text-sm text-muted-foreground w-12 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmt(track.duration)}</span>
             </div>
           ))}

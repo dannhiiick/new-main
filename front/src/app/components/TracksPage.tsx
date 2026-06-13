@@ -28,7 +28,7 @@ export function TracksPage({ onPlayTrack }: TracksPageProps) {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }} className="flex-1 overflow-y-auto p-6">
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -50,7 +50,7 @@ export function TracksPage({ onPlayTrack }: TracksPageProps) {
 
       {!loading && !error && (
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-[auto_1fr_1fr_auto_auto] items-center gap-4 px-5 py-3 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
+          <div className="hidden md:grid grid-cols-[auto_1fr_1fr_auto_auto] items-center gap-4 px-5 py-3 border-b border-border text-xs text-muted-foreground font-medium uppercase tracking-wider">
             <span className="w-6">#</span>
             <span>Название</span>
             <span>Жанр / Язык</span>
@@ -61,7 +61,7 @@ export function TracksPage({ onPlayTrack }: TracksPageProps) {
             <div
               key={track.id}
               onClick={() => onPlayTrack(track)}
-              className="grid grid-cols-[auto_1fr_1fr_auto_auto] items-center gap-4 px-5 py-3 hover:bg-secondary cursor-pointer group transition-colors border-b border-border last:border-0"
+              className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_1fr_auto_auto] items-center gap-3 md:gap-4 px-4 md:px-5 py-3 hover:bg-secondary cursor-pointer group transition-colors border-b border-border last:border-0"
             >
               <span className="w-6 text-xs text-muted-foreground group-hover:hidden text-center">{i + 1}</span>
               <Play size={13} className="text-primary hidden group-hover:block w-6" />
@@ -75,11 +75,11 @@ export function TracksPage({ onPlayTrack }: TracksPageProps) {
                   <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                 </div>
               </div>
-              <div>
+              <div className="hidden md:block">
                 <p className="text-sm text-foreground">{track.genre || '—'}</p>
                 <p className="text-xs text-muted-foreground">{track.language}</p>
               </div>
-              <span className="text-sm text-muted-foreground">{track.plays?.toLocaleString() || '—'}</span>
+              <span className="hidden md:inline text-sm text-muted-foreground">{track.plays?.toLocaleString() || '—'}</span>
               <span className="text-sm text-muted-foreground tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmt(track.duration)}</span>
             </div>
           ))}

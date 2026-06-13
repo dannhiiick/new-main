@@ -25,6 +25,7 @@ import { pushRecent } from './components/libraryStore';
 
 function AppLayout() {
   const [currentTrack, setCurrentTrack] = useState<Track | undefined>();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handlePlay = (track: Track) => {
     setCurrentTrack({ ...track });
@@ -36,9 +37,9 @@ function AppLayout() {
       style={{ fontFamily: "'Inter', sans-serif" }}
       className="flex h-screen bg-background overflow-hidden"
     >
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0">
-        <Header />
+        <Header onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 overflow-hidden flex flex-col">
           <Routes>
             <Route path="/" element={<HomePage onPlayTrack={handlePlay} />} />

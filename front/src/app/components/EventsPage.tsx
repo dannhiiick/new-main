@@ -10,7 +10,7 @@ function EventCard({ concert }: { concert: Concert }) {
   const day = date.getDate();
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/30 transition-all flex gap-5">
+    <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 hover:border-primary/30 transition-all flex flex-col sm:flex-row gap-4 sm:gap-5">
       <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-primary/10 shrink-0">
         <span className="text-xs font-medium text-primary">{month}</span>
         <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>{day}</span>
@@ -23,7 +23,7 @@ function EventCard({ concert }: { concert: Concert }) {
           <span className="flex items-center gap-1"><Clock size={11} />{concert.time}</span>
         </div>
       </div>
-      <div className="flex flex-col items-end justify-between shrink-0">
+      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-between shrink-0">
         <span className="text-sm font-semibold text-foreground">{concert.ticketPrice ? `${concert.ticketPrice.toLocaleString()} ₸` : 'Бесплатно'}</span>
         <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors">
           <Ticket size={12} /> Купить

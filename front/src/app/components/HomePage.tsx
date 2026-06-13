@@ -82,7 +82,7 @@ export function HomePage({ onPlayTrack }: HomePageProps) {
       className="flex-1 overflow-y-auto p-6 flex flex-col gap-8"
     >
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Music2} label="Треков" value={tracks.data ? `${tracks.data.length}` : '—'} />
         <StatCard icon={Users} label="Артистов" value={artists.data ? `${artists.data.length}` : '—'} />
         <StatCard icon={TrendingUp} label="Альбомов" value={albums.data ? `${albums.data.length}` : '—'} />
@@ -93,7 +93,7 @@ export function HomePage({ onPlayTrack }: HomePageProps) {
         style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f0f23 100%)', minHeight: 160 }}>
         <div className="absolute inset-0 opacity-30"
           style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, #8B5CF6 0%, transparent 60%)' }} />
-        <div className="relative p-8">
+        <div className="relative p-5 sm:p-8">
           <p className="text-xs font-medium text-primary uppercase tracking-widest mb-2">Новинки недели</p>
           <h2 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.02em' }}>
             {topTracks[0]?.title ?? 'Свежая музыка'}
@@ -121,7 +121,7 @@ export function HomePage({ onPlayTrack }: HomePageProps) {
         ) : tracks.error ? (
           <div className="text-sm text-muted-foreground py-4">{tracks.error}</div>
         ) : (
-          <div className="grid grid-cols-2 gap-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
             {topTracks.map((t, i) => (
               <TrackRow key={t.id} track={t} index={i} onPlay={() => onPlayTrack(t)} />
             ))}
@@ -137,7 +137,7 @@ export function HomePage({ onPlayTrack }: HomePageProps) {
         {artists.loading ? (
           <div className="text-sm text-muted-foreground">Загрузка...</div>
         ) : (
-          <div className="grid grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {topArtists.map(a => <ArtistCard key={a.id} artist={a} />)}
           </div>
         )}
@@ -151,7 +151,7 @@ export function HomePage({ onPlayTrack }: HomePageProps) {
         {albums.loading ? (
           <div className="text-sm text-muted-foreground">Загрузка...</div>
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {newAlbums.map(a => <AlbumCard key={a.id} album={a} />)}
           </div>
         )}
