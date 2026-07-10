@@ -107,7 +107,7 @@ class RegisterView(APIView):
             value=str(refresh),
             httponly=True,
             samesite="Lax",
-            secure=False,
+            secure=not settings.DEBUG,
         )
         return response
 
@@ -146,7 +146,7 @@ class LoginView(APIView):
             value=str(refresh),
             httponly=True,
             samesite="Lax",
-            secure=False,
+            secure=not settings.DEBUG,
         )
         return response
 
@@ -168,7 +168,7 @@ class RefreshView(APIView):
                 value=str(token),
                 httponly=True,
                 samesite="Lax",
-                secure=False,
+                secure=not settings.DEBUG,
             )
             return response
         except Exception:
