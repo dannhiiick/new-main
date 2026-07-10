@@ -3,7 +3,7 @@ from django.urls import path
 from . import api_views
 from .auth_views import (
     LoginView, MeView, RegisterView, RefreshView, SettingsView,
-    ForgotPasswordView, ResetPasswordView
+    ForgotPasswordView, ResetPasswordView, LogoutView
 )
 
 urlpatterns = [
@@ -29,6 +29,7 @@ urlpatterns = [
     path("library/likes", api_views.library_likes, name="api-library-likes"),
     path("library/follows", api_views.library_follows, name="api-library-follows"),
     path("library/saved-playlists", api_views.library_saved_playlists, name="api-library-saved-playlists"),
+    path("library/saved-albums", api_views.library_saved_albums, name="api-library-saved-albums"),
     path("library/recently-played", api_views.library_recently_played, name="api-library-recently-played"),
 
     # Playlist CRUD
@@ -46,6 +47,7 @@ urlpatterns = [
     path("auth/register", RegisterView.as_view(), name="api-auth-register"),
     path("auth/login", LoginView.as_view(), name="api-auth-login"),
     path("auth/refresh", RefreshView.as_view(), name="api-auth-refresh"),
+    path("auth/logout", LogoutView.as_view(), name="api-auth-logout"),
     path("auth/me", MeView.as_view(), name="api-auth-me"),
     path("auth/forgot-password", ForgotPasswordView.as_view(), name="api-auth-forgot-password"),
     path("auth/reset-password", ResetPasswordView.as_view(), name="api-auth-reset-password"),
@@ -55,6 +57,7 @@ urlpatterns = [
     path("v1/auth/email/register", RegisterView.as_view(), name="mobile-register"),
     path("v1/auth/email/login", LoginView.as_view(), name="mobile-login"),
     path("v1/auth/refresh", RefreshView.as_view(), name="mobile-refresh"),
+    path("v1/auth/logout", LogoutView.as_view(), name="mobile-logout"),
     path("v1/auth/profile", MeView.as_view(), name="mobile-profile"),
     path("v1/auth/email/forgot", ForgotPasswordView.as_view(), name="mobile-forgot-password"),
     path("v1/auth/email/reset", ResetPasswordView.as_view(), name="mobile-reset-password"),

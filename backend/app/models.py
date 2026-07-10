@@ -232,6 +232,15 @@ class SavedPlaylist(models.Model):
         unique_together = ("user", "playlist")
 
 
+class SavedAlbum(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_albums")
+    album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="saved_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "album")
+
+
 class RecentlyPlayed(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recent_plays")
     track = models.ForeignKey(Track, on_delete=models.CASCADE)

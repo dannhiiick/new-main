@@ -8,9 +8,18 @@ const BASE = typeof window !== 'undefined' && window.location.port === '5173'
   : '/api';
 
 let _demoMode = false;
+let _accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  _accessToken = token;
+};
+
+export const setDemoMode = (v: boolean) => {
+  _demoMode = v;
+};
 
 function getToken() {
-  return localStorage.getItem('access_token');
+  return _accessToken || localStorage.getItem('access_token');
 }
 
 function buildQuery(params?: Record<string, string | number | boolean | undefined>) {
@@ -38,13 +47,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let res = await fetch(`${BASE}${path}`, { ...options, headers });
+  let res = await fetch(`${BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: 'include', // Automatically send cookies
+  });
 
-  if (res.status === 401 && localStorage.getItem('refresh_token')) {
+  if (res.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/register') && !path.startsWith('/auth/refresh')) {
     const refreshed = await tryRefresh();
     if (refreshed) {
       headers['Authorization'] = `Bearer ${getToken()}`;
-      res = await fetch(`${BASE}${path}`, { ...options, headers });
+      res = await fetch(`${BASE}${path}`, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
     }
   }
 
@@ -56,17 +73,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 async function tryRefresh(): Promise<boolean> {
-  const refresh = localStorage.getItem('refresh_token');
-  if (!refresh) return false;
   try {
     const res = await fetch(`${BASE}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh }),
+      credentials: 'include',
     });
     if (!res.ok) return false;
     const data = await res.json();
-    localStorage.setItem('access_token', data.access);
+    _accessToken = data.access;
     return true;
   } catch {
     return false;
@@ -91,23 +106,26 @@ async function tryRequest<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const isDemoMode = () => _demoMode;
-export const setDemoMode = (v: boolean) => { _demoMode = v; };
 
 export const api = {
   auth: {
     login: async (username: string, password: string) => {
       if (username === 'demo' || username === 'Demo') {
         _demoMode = true;
+        localStorage.setItem('access_token', 'demo');
         return { access: 'demo', refresh: 'demo' };
       }
       try {
-        return await request<{ access: string; refresh: string }>('/auth/login', {
+        const data = await request<{ access: string; refresh: string }>('/auth/login', {
           method: 'POST',
           body: JSON.stringify({ username, password }),
         });
+        _accessToken = data.access;
+        return data;
       } catch (e: unknown) {
         if (e instanceof TypeError && (e.message.includes('fetch') || e.message.includes('Failed'))) {
           _demoMode = true;
+          localStorage.setItem('access_token', 'demo');
           return { access: 'demo', refresh: 'demo' };
         }
         throw e;
@@ -116,13 +134,16 @@ export const api = {
     register: async (username: string, email: string, password: string) => {
       if (_demoMode) return { access: 'demo', refresh: 'demo' };
       try {
-        return await request<{ access: string; refresh: string }>('/auth/register', {
+        const data = await request<{ access: string; refresh: string }>('/auth/register', {
           method: 'POST',
           body: JSON.stringify({ username, email, password }),
         });
+        _accessToken = data.access;
+        return data;
       } catch (e: unknown) {
         if (e instanceof TypeError && (e.message.includes('fetch') || e.message.includes('Failed'))) {
           _demoMode = true;
+          localStorage.setItem('access_token', 'demo');
           return { access: 'demo', refresh: 'demo' };
         }
         throw e;
@@ -134,10 +155,15 @@ export const api = {
       }
       return request<CurrentUser>('/auth/me');
     },
+    refresh: async (): Promise<boolean> => {
+      return tryRefresh();
+    },
     logout: () => {
+      _accessToken = null;
+      _demoMode = false;
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      _demoMode = false;
+      request('/auth/logout', { method: 'POST' }).catch(() => {});
     },
     updateSettings: async (settings: Partial<UserSettings>) => {
       if (_demoMode) return settings;
@@ -381,6 +407,24 @@ export const api = {
       return request<{ success: boolean }>('/library/saved-playlists', {
         method: 'DELETE',
         body: JSON.stringify({ playlist_id: playlistId }),
+      });
+    },
+    savedAlbums: async (): Promise<Album[]> => {
+      if (_demoMode) return [];
+      return request<Album[]>('/library/saved-albums');
+    },
+    saveAlbum: async (albumId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/saved-albums', {
+        method: 'POST',
+        body: JSON.stringify({ album_id: albumId }),
+      });
+    },
+    unsaveAlbum: async (albumId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/saved-albums', {
+        method: 'DELETE',
+        body: JSON.stringify({ album_id: albumId }),
       });
     },
     recentlyPlayed: async (): Promise<Track[]> => {

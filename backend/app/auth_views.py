@@ -94,7 +94,7 @@ class RegisterView(APIView):
         UserProfile.objects.create(user=user, display_name=username)
 
         refresh = RefreshToken.for_user(user)
-        return Response(
+        response = Response(
             {
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
@@ -102,6 +102,14 @@ class RegisterView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            samesite="Lax",
+            secure=False,
+        )
+        return response
 
 
 class LoginView(APIView):
@@ -125,7 +133,7 @@ class LoginView(APIView):
             )
 
         refresh = RefreshToken.for_user(user)
-        return Response(
+        response = Response(
             {
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
@@ -133,20 +141,36 @@ class LoginView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            samesite="Lax",
+            secure=False,
+        )
+        return response
 
 
 class RefreshView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        refresh = request.data.get("refresh")
+        refresh = request.COOKIES.get("refresh_token") or request.data.get("refresh")
         if not refresh:
             return Response({"detail": "refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             token = RefreshToken(refresh)
             access_token = str(token.access_token)
-            return Response({"access": access_token}, status=status.HTTP_200_OK)
+            response = Response({"access": access_token}, status=status.HTTP_200_OK)
+            response.set_cookie(
+                key="refresh_token",
+                value=str(token),
+                httponly=True,
+                samesite="Lax",
+                secure=False,
+            )
+            return response
         except Exception:
             return Response({"detail": "invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -308,4 +332,13 @@ class ResetPasswordView(APIView):
         token_obj.save()
 
         return Response({"success": True, "detail": "Пароль успешно сброшен."})
+
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        res = Response({"success": True}, status=status.HTTP_200_OK)
+        res.delete_cookie("refresh_token")
+        return res
 

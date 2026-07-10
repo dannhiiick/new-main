@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 from .models import (
     Track, Artist, Album, Playlist, Concert, Like, Follow,
-    SavedPlaylist, RecentlyPlayed, PlayEvent, Notification,
+    SavedPlaylist, SavedAlbum, RecentlyPlayed, PlayEvent, Notification,
     PlaylistTrack, AlbumTrack
 )
 from .serializers import (
@@ -337,6 +337,35 @@ def library_saved_playlists(request):
             return Response({"detail": "playlist_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         SavedPlaylist.objects.filter(user=request.user, playlist_id=playlist_id).delete()
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET", "POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+def library_saved_albums(request):
+    if request.method == "GET":
+        saved = SavedAlbum.objects.filter(user=request.user).select_related("album")
+        albums = [sv.album for sv in saved]
+        return Response(AlbumSerializer(albums, many=True, context={"request": request}).data)
+
+    elif request.method == "POST":
+        album_id = request.data.get("album_id") or request.data.get("album")
+        if not album_id:
+            return Response({"detail": "album_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            album = Album.objects.get(pk=album_id)
+        except Album.DoesNotExist:
+            return Response({"detail": "Album not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        SavedAlbum.objects.get_or_create(user=request.user, album=album)
+        return Response({"success": True}, status=status.HTTP_201_CREATED)
+
+    elif request.method == "DELETE":
+        album_id = request.query_params.get("album_id") or request.data.get("album_id") or request.data.get("album")
+        if not album_id:
+            return Response({"detail": "album_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        SavedAlbum.objects.filter(user=request.user, album_id=album_id).delete()
         return Response({"success": True}, status=status.HTTP_200_OK)
 
 

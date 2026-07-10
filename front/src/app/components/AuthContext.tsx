@@ -50,29 +50,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (localStorage.getItem('access_token')) {
-      refreshUser()
-        .then(() => {
-          syncLibrary();
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    const localTok = localStorage.getItem('access_token');
+    if (localTok === 'demo') {
+      refreshUser().finally(() => setLoading(false));
+      return;
     }
+
+    api.auth.refresh()
+      .then((success) => {
+        if (success) {
+          return refreshUser().then(() => syncLibrary());
+        }
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (username: string, password: string) => {
-    const { access, refresh } = await api.auth.login(username, password);
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
+    await api.auth.login(username, password);
     await refreshUser();
     await syncLibrary();
   };
 
   const register = async (username: string, email: string, password: string) => {
-    const { access, refresh } = await api.auth.register(username, email, password);
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
+    await api.auth.register(username, email, password);
     await refreshUser();
     await syncLibrary();
   };

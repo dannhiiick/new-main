@@ -6,6 +6,7 @@ const LIKES_KEY = 'qm:liked_tracks';
 const RECENT_KEY = 'qm:recent_tracks';
 const FOLLOWS_KEY = 'qm:followed_artists';
 const SAVED_PLAYLISTS_KEY = 'qm:saved_playlists';
+const SAVED_ALBUMS_KEY = 'qm:saved_albums';
 const MAX_RECENT = 30;
 
 type Listener = () => void;
@@ -96,17 +97,37 @@ export function toggleSavedPlaylist(id: string) {
   });
 }
 
+export function getSavedAlbums(): string[] {
+  return readJSON<string[]>(SAVED_ALBUMS_KEY, []);
+}
+
+export function toggleSavedAlbum(id: string) {
+  const list = getSavedAlbums();
+  const wasSaved = list.includes(id);
+  const next = wasSaved ? list.filter(x => x !== id) : [...list, id];
+  writeJSON(SAVED_ALBUMS_KEY, next);
+  // Fire API call, rollback on error
+  const apiCall = wasSaved
+    ? api.library.unsaveAlbum(String(id))
+    : api.library.saveAlbum(String(id));
+  apiCall.catch(() => {
+    writeJSON(SAVED_ALBUMS_KEY, list); // rollback
+  });
+}
+
 export async function syncLibrary() {
   try {
-    const [likedTracks, follows, saved, recent] = await Promise.all([
+    const [likedTracks, follows, savedPlaylists, savedAlbs, recent] = await Promise.all([
       api.library.likes(),
       api.library.follows(),
       api.library.savedPlaylists(),
+      api.library.savedAlbums(),
       api.library.recentlyPlayed(),
     ]);
     writeJSON(LIKES_KEY, likedTracks);
     writeJSON(FOLLOWS_KEY, follows.map((f: any) => String(f.id)));
-    writeJSON(SAVED_PLAYLISTS_KEY, saved.map((s: any) => String(s.id)));
+    writeJSON(SAVED_PLAYLISTS_KEY, savedPlaylists.map((s: any) => String(s.id)));
+    writeJSON(SAVED_ALBUMS_KEY, savedAlbs.map((a: any) => String(a.id)));
     writeJSON(RECENT_KEY, recent);
   } catch {
     // Keep local cache on error
@@ -118,6 +139,7 @@ export function clearLibrary() {
   localStorage.removeItem(RECENT_KEY);
   localStorage.removeItem(FOLLOWS_KEY);
   localStorage.removeItem(SAVED_PLAYLISTS_KEY);
+  localStorage.removeItem(SAVED_ALBUMS_KEY);
   emit();
 }
 
@@ -133,9 +155,11 @@ export function useLibrary() {
     recent: getRecentTracks(),
     followed: getFollowedArtists(),
     saved: getSavedPlaylists(),
+    savedAlbums: getSavedAlbums(),
     toggleLike: useCallback(toggleLike, []),
     toggleFollowArtist: useCallback(toggleFollowArtist, []),
     toggleSavedPlaylist: useCallback(toggleSavedPlaylist, []),
+    toggleSavedAlbum: useCallback(toggleSavedAlbum, []),
     isLiked: useCallback(isLiked, []),
   };
 }

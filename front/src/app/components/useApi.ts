@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export function useApi<T>(fetcher: () => Promise<T>) {
+export function useApi<T>(fetcher: () => Promise<T>, deps: any[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export function useApi<T>(fetcher: () => Promise<T>) {
       .catch(e => { if (!cancelled) setError(e.message || 'Ошибка загрузки'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, deps);
 
   return { data, loading, error };
 }
