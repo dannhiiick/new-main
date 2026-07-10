@@ -1,11 +1,9 @@
-import { useState } from 'react';
-import { NavLink } from 'react-router';
+import { NavLink, useNavigate } from 'react-router';
 import {
   Home, Search, Users, Music2, Disc3, ListMusic,
   Radio, TrendingUp, Calendar, Library, HelpCircle, Zap
 } from 'lucide-react';
 import { useAuth } from './AuthContext';
-import { ComingSoonModal } from './ComingSoonModal';
 
 const NAV = [
   { icon: Home, label: 'Главная', path: '/' },
@@ -28,7 +26,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
-  const [premiumOpen, setPremiumOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -85,20 +83,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <p className="text-xs text-muted-foreground mb-1">Добро пожаловать</p>
           <p className="text-sm font-medium text-foreground truncate">{user?.displayName || user?.username}</p>
           <button
-            onClick={() => setPremiumOpen(true)}
-            className="mt-3 w-full py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors"
+            onClick={() => { navigate('/premium'); onClose?.(); }}
+            className="mt-3 w-full py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors cursor-pointer"
           >
             Premium
           </button>
         </div>
       </div>
-
-      <ComingSoonModal
-        open={premiumOpen}
-        onClose={() => setPremiumOpen(false)}
-        title="Premium-подписка скоро"
-        description="Тарифы, оплата и эксклюзивные плейлисты для Premium-пользователей сейчас в разработке. Следите за обновлениями!"
-      />
       </aside>
     </>
   );

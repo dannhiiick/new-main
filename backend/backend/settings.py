@@ -28,12 +28,12 @@ _DEFAULT_SECRET_KEY = (
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", _DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("1", "true", "yes")
 
 _hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "").strip()
 _allowed = [h.strip() for h in _hosts.split(",") if h.strip()]
-# Пустой список (например env " , , ") ломает Django → 500 / DisallowedHost
-ALLOWED_HOSTS = _allowed if _allowed else ["*"]
+# Secure default for ALLOWED_HOSTS
+ALLOWED_HOSTS = _allowed if _allowed else ["localhost", "127.0.0.1"]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://music-yzy1.onrender.com',
@@ -156,7 +156,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 MUSIC_ROOT = BASE_DIR.parent
 STATIC_ROOT = os.path.join(str(BASE_DIR), 'staticfiles')
 # DRF / CORS (dev)
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() in ("1", "true", "yes")
+_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
+if _cors_origins:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
+
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@qmusic.kz")
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (

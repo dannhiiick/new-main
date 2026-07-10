@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { useApi } from './useApi';
 import { api } from './api';
 
@@ -15,6 +16,7 @@ const GENRE_COLORS: Record<string, string> = {
 };
 
 export function GenresPage() {
+  const navigate = useNavigate();
   const { data, loading } = useApi(() => api.tracks());
 
   const genreCounts: Record<string, number> = {};
@@ -32,6 +34,7 @@ export function GenresPage() {
           {genres.map(([genre, count]) => (
             <div
               key={genre}
+              onClick={() => navigate(`/tracks?genre=${encodeURIComponent(genre)}`)}
               className="relative h-32 rounded-2xl overflow-hidden cursor-pointer group"
               style={{ background: GENRE_COLORS[genre] ?? GENRE_COLORS.default }}
             >

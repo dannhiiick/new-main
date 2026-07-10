@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Track } from './api';
+import { api } from './api';
 
 const LIKES_KEY = 'qm:liked_tracks';
 const RECENT_KEY = 'qm:recent_tracks';
@@ -35,10 +36,16 @@ export function isLiked(id: string): boolean {
 
 export function toggleLike(track: Track) {
   const list = getLikedTracks();
-  const next = list.some(t => t.id === track.id)
-    ? list.filter(t => t.id !== track.id)
-    : [track, ...list];
+  const wasLiked = list.some(t => t.id === track.id);
+  const next = wasLiked ? list.filter(t => t.id !== track.id) : [track, ...list];
   writeJSON(LIKES_KEY, next);
+  // Fire API call, rollback on error
+  const apiCall = wasLiked
+    ? api.library.removeLike(String(track.id))
+    : api.library.addLike(String(track.id));
+  apiCall.catch(() => {
+    writeJSON(LIKES_KEY, list); // rollback
+  });
 }
 
 export function getRecentTracks(): Track[] {
@@ -49,6 +56,8 @@ export function pushRecent(track: Track) {
   const list = getRecentTracks().filter(t => t.id !== track.id);
   list.unshift(track);
   writeJSON(RECENT_KEY, list.slice(0, MAX_RECENT));
+  // Fire-and-forget API call
+  api.library.addRecentlyPlayed(String(track.id)).catch(() => {});
 }
 
 export function getFollowedArtists(): string[] {
@@ -57,8 +66,16 @@ export function getFollowedArtists(): string[] {
 
 export function toggleFollowArtist(id: string) {
   const list = getFollowedArtists();
-  const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id];
+  const wasFollowed = list.includes(id);
+  const next = wasFollowed ? list.filter(x => x !== id) : [...list, id];
   writeJSON(FOLLOWS_KEY, next);
+  // Fire API call, rollback on error
+  const apiCall = wasFollowed
+    ? api.library.removeFollow(String(id))
+    : api.library.addFollow(String(id));
+  apiCall.catch(() => {
+    writeJSON(FOLLOWS_KEY, list); // rollback
+  });
 }
 
 export function getSavedPlaylists(): string[] {
@@ -67,8 +84,41 @@ export function getSavedPlaylists(): string[] {
 
 export function toggleSavedPlaylist(id: string) {
   const list = getSavedPlaylists();
-  const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id];
+  const wasSaved = list.includes(id);
+  const next = wasSaved ? list.filter(x => x !== id) : [...list, id];
   writeJSON(SAVED_PLAYLISTS_KEY, next);
+  // Fire API call, rollback on error
+  const apiCall = wasSaved
+    ? api.library.unsavePlaylist(String(id))
+    : api.library.savePlaylist(String(id));
+  apiCall.catch(() => {
+    writeJSON(SAVED_PLAYLISTS_KEY, list); // rollback
+  });
+}
+
+export async function syncLibrary() {
+  try {
+    const [likedTracks, follows, saved, recent] = await Promise.all([
+      api.library.likes(),
+      api.library.follows(),
+      api.library.savedPlaylists(),
+      api.library.recentlyPlayed(),
+    ]);
+    writeJSON(LIKES_KEY, likedTracks);
+    writeJSON(FOLLOWS_KEY, follows.map((f: any) => String(f.id)));
+    writeJSON(SAVED_PLAYLISTS_KEY, saved.map((s: any) => String(s.id)));
+    writeJSON(RECENT_KEY, recent);
+  } catch {
+    // Keep local cache on error
+  }
+}
+
+export function clearLibrary() {
+  localStorage.removeItem(LIKES_KEY);
+  localStorage.removeItem(RECENT_KEY);
+  localStorage.removeItem(FOLLOWS_KEY);
+  localStorage.removeItem(SAVED_PLAYLISTS_KEY);
+  emit();
 }
 
 export function useLibrary() {

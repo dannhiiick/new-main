@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api, type CurrentUser } from './api';
+import { syncLibrary, clearLibrary } from './libraryStore';
 
 interface AuthState {
   user: CurrentUser | null;
@@ -11,6 +12,18 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
+
+function applyTheme(theme: 'light' | 'dark' | 'system') {
+  if (typeof window === 'undefined') return;
+  const root = window.document.documentElement;
+  root.classList.remove('light', 'dark');
+  if (theme === 'system') {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.classList.add(isDark ? 'dark' : 'light');
+  } else {
+    root.classList.add(theme);
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
@@ -24,12 +37,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       // Clear invalid tokens from localStorage so the user is cleanly logged out
       api.auth.logout();
+      clearLibrary();
     }
   };
 
   useEffect(() => {
+    if (user?.settings?.theme) {
+      applyTheme(user.settings.theme);
+    } else {
+      applyTheme('system');
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (localStorage.getItem('access_token')) {
-      refreshUser().finally(() => setLoading(false));
+      refreshUser()
+        .then(() => {
+          syncLibrary();
+        })
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -40,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
     await refreshUser();
+    await syncLibrary();
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -47,10 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
     await refreshUser();
+    await syncLibrary();
   };
 
   const logout = () => {
     api.auth.logout();
+    clearLibrary();
     setUser(null);
   };
 

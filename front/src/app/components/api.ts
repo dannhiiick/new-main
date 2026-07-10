@@ -13,13 +13,27 @@ function getToken() {
   return localStorage.getItem('access_token');
 }
 
+function buildQuery(params?: Record<string, string | number | boolean | undefined>) {
+  if (!params) return '';
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, val]) => {
+    if (val !== undefined && val !== '') {
+      searchParams.append(key, String(val));
+    }
+  });
+  const str = searchParams.toString();
+  return str ? `?${str}` : '';
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  // Do not send Authorization header for login and register requests to prevent DRF rejecting them due to expired old tokens
+  const headers: Record<string, string> = {};
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  Object.assign(headers, options.headers);
+
+  // Do not send Authorization header for login and register requests
   if (token && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -62,9 +76,17 @@ async function tryRefresh(): Promise<boolean> {
 async function tryRequest<T>(path: string, options?: RequestInit): Promise<T> {
   try {
     return await request<T>(path, options);
-  } catch {
-    _demoMode = true;
-    throw new Error('demo');
+  } catch (e: any) {
+    if (e.message === 'demo') {
+      _demoMode = true;
+      throw e;
+    }
+    // Fallback if the connection failed
+    if (e instanceof TypeError && (e.message.includes('fetch') || e.message.includes('Failed'))) {
+      _demoMode = true;
+      throw new Error('demo');
+    }
+    throw e;
   }
 }
 
@@ -121,26 +143,267 @@ export const api = {
       if (_demoMode) return settings;
       return request('/settings', { method: 'PATCH', body: JSON.stringify(settings) });
     },
+    updateProfile: async (formData: FormData): Promise<CurrentUser> => {
+      if (_demoMode || localStorage.getItem('access_token') === 'demo') {
+        MOCK_USER.displayName = String(formData.get('display_name') || MOCK_USER.displayName);
+        MOCK_USER.bio = String(formData.get('bio') || MOCK_USER.bio);
+        MOCK_USER.city = String(formData.get('city') || MOCK_USER.city);
+        return MOCK_USER;
+      }
+      const token = getToken();
+      const res = await fetch(`${BASE}/auth/me`, {
+        method: 'PATCH',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || err.error || `HTTP ${res.status}`);
+      }
+      return res.json();
+    },
+    forgotPassword: async (email: string): Promise<any> => {
+      if (_demoMode) return { success: true };
+      return request('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
+    resetPassword: async (token: string, password: string): Promise<any> => {
+      if (_demoMode) return { success: true };
+      return request('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      });
+    },
   },
-  tracks: async (): Promise<Track[]> => {
+  tracks: async (params?: { page?: number; page_size?: number; genre?: string; status?: string }): Promise<any> => {
     if (_demoMode) return MOCK_TRACKS;
-    return tryRequest<Track[]>('/tracks');
+    return tryRequest<any>(`/tracks${buildQuery(params)}`);
   },
-  artists: async (): Promise<Artist[]> => {
+  artists: async (params?: { page?: number; page_size?: number; genre?: string }): Promise<any> => {
     if (_demoMode) return MOCK_ARTISTS;
-    return tryRequest<Artist[]>('/artists');
+    return tryRequest<any>(`/artists${buildQuery(params)}`);
   },
-  albums: async (): Promise<Album[]> => {
+  albums: async (params?: { page?: number; page_size?: number }): Promise<any> => {
     if (_demoMode) return MOCK_ALBUMS;
-    return tryRequest<Album[]>('/albums');
+    return tryRequest<any>(`/albums${buildQuery(params)}`);
   },
-  playlists: async (): Promise<Playlist[]> => {
-    if (_demoMode) return MOCK_PLAYLISTS;
-    return tryRequest<Playlist[]>('/playlists');
+  playlists: (() => {
+    const fn = async (params?: { page?: number; page_size?: number }): Promise<any> => {
+      if (_demoMode) return MOCK_PLAYLISTS;
+      return tryRequest<any>(`/playlists${buildQuery(params)}`);
+    };
+    fn.create = async (name: string, description: string, isPublic: boolean): Promise<Playlist> => {
+      if (_demoMode) {
+        const newPl: Playlist = {
+          id: String(Date.now()),
+          name,
+          description,
+          cover: '',
+          type: 'user',
+          tracks: [],
+          creator: 'demo',
+          user: 999,
+          is_public: isPublic,
+        };
+        MOCK_PLAYLISTS.push(newPl);
+        return newPl;
+      }
+      return request<Playlist>('/playlists/create', {
+        method: 'POST',
+        body: JSON.stringify({ name, description, is_public: isPublic }),
+      });
+    };
+    fn.update = async (id: string, data: Partial<Playlist> & { is_public?: boolean }): Promise<Playlist> => {
+      if (_demoMode) {
+        const pl = MOCK_PLAYLISTS.find(p => String(p.id) === String(id));
+        if (pl) Object.assign(pl, data);
+        return pl!;
+      }
+      const mappedData = {
+        name: data.name,
+        description: data.description,
+        is_public: data.is_public,
+        cover: data.cover,
+      };
+      return request<Playlist>(`/playlists/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(mappedData),
+      });
+    };
+    fn.delete = async (id: string): Promise<void> => {
+      if (_demoMode) {
+        const idx = MOCK_PLAYLISTS.findIndex(p => String(p.id) === String(id));
+        if (idx !== -1) MOCK_PLAYLISTS.splice(idx, 1);
+        return;
+      }
+      return request<void>(`/playlists/${id}`, {
+        method: 'DELETE',
+      });
+    };
+    fn.addTrack = async (playlistId: string, trackId: string): Promise<Playlist> => {
+      if (_demoMode) {
+        const pl = MOCK_PLAYLISTS.find(p => String(p.id) === String(playlistId));
+        const tr = MOCK_TRACKS.find(t => String(t.id) === String(trackId));
+        if (pl && tr && !pl.tracks.some(t => String(t.id) === String(trackId))) {
+          pl.tracks.push(tr);
+        }
+        return pl!;
+      }
+      return request<Playlist>(`/playlists/${playlistId}/tracks`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'add', track_id: trackId }),
+      });
+    };
+    fn.removeTrack = async (playlistId: string, trackId: string): Promise<Playlist> => {
+      if (_demoMode) {
+        const pl = MOCK_PLAYLISTS.find(p => String(p.id) === String(playlistId));
+        if (pl) pl.tracks = pl.tracks.filter(t => String(t.id) !== String(trackId));
+        return pl!;
+      }
+      return request<Playlist>(`/playlists/${playlistId}/tracks`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'remove', track_id: trackId }),
+      });
+    };
+    fn.reorderTrack = async (playlistId: string, trackId: string, order: number): Promise<Playlist> => {
+      if (_demoMode) {
+        const pl = MOCK_PLAYLISTS.find(p => String(p.id) === String(playlistId));
+        if (pl) {
+          const idx = pl.tracks.findIndex(t => String(t.id) === String(trackId));
+          if (idx !== -1) {
+            const [track] = pl.tracks.splice(idx, 1);
+            pl.tracks.splice(order - 1, 0, track);
+          }
+        }
+        return pl!;
+      }
+      return request<Playlist>(`/playlists/${playlistId}/tracks`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'reorder', track_id: trackId, order }),
+      });
+    };
+    return fn;
+  })(),
+  concerts: (() => {
+    const fn = async (params?: { page?: number; page_size?: number }): Promise<any> => {
+      if (_demoMode) return MOCK_CONCERTS;
+      return tryRequest<any>(`/concerts${buildQuery(params)}`);
+    };
+    fn.purchase = async (id: string, email: string, phone: string): Promise<any> => {
+      if (_demoMode) return { success: true, tickets_available: 9, tickets_sold: 1 };
+      return request<any>(`/concerts/${id}/purchase`, {
+        method: 'POST',
+        body: JSON.stringify({ email, phone }),
+      });
+    };
+    return fn;
+  })(),
+  artist: async (id: string): Promise<Artist> => {
+    if (_demoMode) {
+      const found = MOCK_ARTISTS.find(a => String(a.id) === String(id));
+      if (!found) throw new Error('Artist not found');
+      return found;
+    }
+    return request<Artist>(`/artists/${id}`);
   },
-  concerts: async (): Promise<Concert[]> => {
-    if (_demoMode) return MOCK_CONCERTS;
-    return tryRequest<Concert[]>('/concerts');
+  album: async (id: string): Promise<Album> => {
+    if (_demoMode) {
+      const found = MOCK_ALBUMS.find(a => String(a.id) === String(id));
+      if (!found) throw new Error('Album not found');
+      return found;
+    }
+    return request<Album>(`/albums/${id}`);
+  },
+  search: async (q: string): Promise<{ tracks: Track[]; artists: Artist[]; albums: Album[]; playlists: Playlist[] }> => {
+    if (_demoMode) {
+      const query = q.toLowerCase();
+      return {
+        tracks: MOCK_TRACKS.filter(t => t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query)),
+        artists: MOCK_ARTISTS.filter(a => a.name.toLowerCase().includes(query)),
+        albums: MOCK_ALBUMS.filter(a => a.title.toLowerCase().includes(query) || a.artist.toLowerCase().includes(query)),
+        playlists: MOCK_PLAYLISTS.filter(p => p.name.toLowerCase().includes(query)),
+      };
+    }
+    return tryRequest<{ tracks: Track[]; artists: Artist[]; albums: Album[]; playlists: Playlist[] }>(`/search?q=${encodeURIComponent(q)}`);
+  },
+  library: {
+    likes: async (): Promise<Track[]> => {
+      if (_demoMode) return [];
+      return request<Track[]>('/library/likes');
+    },
+    addLike: async (trackId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/likes', {
+        method: 'POST',
+        body: JSON.stringify({ track_id: trackId }),
+      });
+    },
+    removeLike: async (trackId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/likes', {
+        method: 'DELETE',
+        body: JSON.stringify({ track_id: trackId }),
+      });
+    },
+    follows: async (): Promise<Artist[]> => {
+      if (_demoMode) return [];
+      return request<Artist[]>('/library/follows');
+    },
+    addFollow: async (artistId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/follows', {
+        method: 'POST',
+        body: JSON.stringify({ artist_id: artistId }),
+      });
+    },
+    removeFollow: async (artistId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/follows', {
+        method: 'DELETE',
+        body: JSON.stringify({ artist_id: artistId }),
+      });
+    },
+    savedPlaylists: async (): Promise<Playlist[]> => {
+      if (_demoMode) return [];
+      return request<Playlist[]>('/library/saved-playlists');
+    },
+    savePlaylist: async (playlistId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/saved-playlists', {
+        method: 'POST',
+        body: JSON.stringify({ playlist_id: playlistId }),
+      });
+    },
+    unsavePlaylist: async (playlistId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/saved-playlists', {
+        method: 'DELETE',
+        body: JSON.stringify({ playlist_id: playlistId }),
+      });
+    },
+    recentlyPlayed: async (): Promise<Track[]> => {
+      if (_demoMode) return [];
+      return request<Track[]>('/library/recently-played');
+    },
+    addRecentlyPlayed: async (trackId: string): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/library/recently-played', {
+        method: 'POST',
+        body: JSON.stringify({ track_id: trackId }),
+      });
+    },
+  },
+  notifications: {
+    get: async (): Promise<any[]> => {
+      if (_demoMode) return [];
+      return request<any[]>('/notifications');
+    },
+    markAllRead: async (): Promise<{ success: boolean }> => {
+      if (_demoMode) return { success: true };
+      return request<{ success: boolean }>('/notifications', { method: 'PATCH' });
+    },
   },
   audioUrl: (filename: string) => `${BASE}/media/music/${filename}`,
 };
@@ -162,6 +425,7 @@ export interface CurrentUser {
   displayName: string;
   bio: string;
   city: string;
+  avatar?: string | null;
   settings: UserSettings;
 }
 
@@ -208,6 +472,8 @@ export interface Playlist {
   type: 'editorial' | 'thematic' | 'user';
   tracks: Track[];
   creator?: string;
+  user?: number | null;
+  is_public?: boolean;
 }
 
 export interface Concert {
@@ -219,4 +485,6 @@ export interface Concert {
   city: string;
   ticketPrice: number;
   image: string;
+  tickets_available: number;
+  tickets_sold: number;
 }

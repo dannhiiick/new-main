@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
-import { Search, Play, TrendingUp, Sparkles } from 'lucide-react';
-import { api, type Track, type Artist } from './api';
+import { useSearchParams, useNavigate } from 'react-router';
+import { Search, Play, TrendingUp, Sparkles, Disc, Music2, Users, ListMusic } from 'lucide-react';
+import { api, type Track, type Artist, type Album, type Playlist } from './api';
+import { usePlayback } from './PlaybackContext';
+import { useTranslation } from './i18n';
 
-interface SearchPageProps {
-  onPlayTrack?: (track: Track) => void;
-}
-
-export function SearchPage({ onPlayTrack }: SearchPageProps) {
+export function SearchPage() {
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { playTrack } = usePlayback();
+  const { t } = useTranslation();
+
   const [query, setQuery] = useState(params.get('q') ?? '');
   const [tracks, setTracks] = useState<Track[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -20,17 +24,26 @@ export function SearchPage({ onPlayTrack }: SearchPageProps) {
   }, [params]);
 
   useEffect(() => {
-    if (!query.trim()) { setTracks([]); setArtists([]); return; }
+    if (!query.trim()) {
+      setTracks([]);
+      setArtists([]);
+      setAlbums([]);
+      setPlaylists([]);
+      return;
+    }
+    
     const timeout = setTimeout(async () => {
       setLoading(true);
       try {
-        const [t, a] = await Promise.all([api.tracks(), api.artists()]);
-        const q = query.toLowerCase();
-        setTracks(t.filter(tr => tr.title.toLowerCase().includes(q) || tr.artist.toLowerCase().includes(q)));
-        setArtists(a.filter(ar => ar.name.toLowerCase().includes(q)));
+        const res = await api.search(query.trim());
+        setTracks(res.tracks || []);
+        setArtists(res.artists || []);
+        setAlbums(res.albums || []);
+        setPlaylists(res.playlists || []);
       } catch { /* ignore */ }
       finally { setLoading(false); }
     }, 400);
+
     return () => clearTimeout(timeout);
   }, [query]);
 
@@ -39,34 +52,45 @@ export function SearchPage({ onPlayTrack }: SearchPageProps) {
     setParams(e.target.value ? { q: e.target.value } : {});
   };
 
+  const hasResults = tracks.length > 0 || artists.length > 0 || albums.length > 0 || playlists.length > 0;
+
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif" }} className="flex-1 overflow-y-auto p-6">
-      <div className="relative max-w-xl mb-8">
+    <div style={{ fontFamily: "'Inter', sans-serif" }} className="flex-1 overflow-y-auto p-6 bg-background">
+      {/* Search Input bar */}
+      <div className="relative max-w-xl mb-8 shadow-sm">
         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input
           value={query}
           onChange={handleSearch}
           autoFocus
-          placeholder="Поиск треков, артистов..."
+          placeholder={t('search_placeholder')}
           className="w-full pl-11 pr-4 py-3 rounded-xl bg-input-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
         />
       </div>
 
-      {loading && <div className="text-muted-foreground text-sm">Поиск...</div>}
+      {loading && <div className="text-muted-foreground text-sm py-4">{t('loading')}</div>}
 
       {!loading && query && (
         <div className="flex flex-col gap-8">
+          
+          {/* Artists */}
           {artists.length > 0 && (
             <section>
-              <h3 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Артисты</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <Users size={15} className="text-primary" /> {t('followedArtists')}
+              </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {artists.slice(0, 4).map(a => (
-                  <div key={a.id} className="flex flex-col items-center gap-2 p-4 bg-card border border-border rounded-2xl hover:border-primary/30 transition-colors cursor-pointer">
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white overflow-hidden"
+                  <div
+                    key={a.id}
+                    onClick={() => navigate(`/artists/${a.id}`)}
+                    className="flex flex-col items-center gap-2 p-4 bg-card border border-border rounded-2xl hover:border-primary/30 hover:scale-[1.01] transition-all cursor-pointer shadow-sm text-center"
+                  >
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white overflow-hidden shadow"
                       style={{ background: 'linear-gradient(135deg, #8B5CF6, #06B6D4)' }}>
                       {a.image ? <img src={a.image} alt={a.name} className="w-full h-full object-cover" /> : a.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <p className="text-sm font-medium text-foreground text-center truncate w-full">{a.name}</p>
+                    <p className="text-sm font-bold text-foreground truncate w-full">{a.name}</p>
                     <p className="text-xs text-muted-foreground">{a.genre}</p>
                   </div>
                 ))}
@@ -74,15 +98,18 @@ export function SearchPage({ onPlayTrack }: SearchPageProps) {
             </section>
           )}
 
+          {/* Tracks */}
           {tracks.length > 0 && (
             <section>
-              <h3 className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>Треки</h3>
-              <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                {tracks.slice(0, 10).map((t, i) => (
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <Music2 size={15} className="text-primary" /> {t('tracks')}
+              </h3>
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-lg">
+                {tracks.slice(0, 8).map((t, i) => (
                   <div
                     key={t.id}
-                    onClick={() => onPlayTrack?.(t)}
-                    className="flex items-center gap-3 px-5 py-3 hover:bg-secondary cursor-pointer group transition-colors border-b border-border last:border-0"
+                    onClick={() => playTrack(t, tracks)}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-secondary/40 cursor-pointer group transition-all border-b border-border last:border-0"
                   >
                     <span className="text-xs text-muted-foreground w-5 text-center group-hover:hidden">{i + 1}</span>
                     <Play size={13} className="text-primary hidden group-hover:block w-5" />
@@ -101,7 +128,55 @@ export function SearchPage({ onPlayTrack }: SearchPageProps) {
             </section>
           )}
 
-          {tracks.length === 0 && artists.length === 0 && (
+          {/* Albums */}
+          {albums.length > 0 && (
+            <section>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <Disc size={15} className="text-primary" /> {t('albums')}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {albums.slice(0, 4).map(al => (
+                  <div
+                    key={al.id}
+                    onClick={() => navigate(`/albums/${al.id}`)}
+                    className="bg-card border border-border rounded-2xl p-4 hover:border-primary/30 hover:scale-[1.01] transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/10 border border-border flex items-center justify-center text-xl font-bold text-white mb-3 overflow-hidden shadow">
+                      {al.cover ? <img src={al.cover} alt={al.title} className="w-full h-full object-cover" /> : al.title.slice(0, 2).toUpperCase()}
+                    </div>
+                    <p className="text-sm font-bold text-foreground truncate">{al.title}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{al.artist}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Playlists */}
+          {playlists.length > 0 && (
+            <section>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <ListMusic size={15} className="text-primary" /> {t('playlists')}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {playlists.slice(0, 4).map(pl => (
+                  <div
+                    key={pl.id}
+                    onClick={() => navigate(`/playlists/${pl.id}`)}
+                    className="bg-card border border-border rounded-2xl p-4 hover:border-primary/30 hover:scale-[1.01] transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-border flex items-center justify-center text-xl font-bold text-white mb-3 overflow-hidden shadow">
+                      {pl.cover ? <img src={pl.cover} alt={pl.name} className="w-full h-full object-cover" /> : pl.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <p className="text-sm font-bold text-foreground truncate">{pl.name}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">от {pl.creator || 'QMusic'}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {!hasResults && (
             <div className="text-center text-muted-foreground text-sm py-12">
               Ничего не найдено по запросу «{query}»
             </div>
@@ -125,18 +200,19 @@ const POPULAR_GENRES = [
 ];
 
 function SearchSuggestions({ onPick }: { onPick: (q: string) => void }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-8">
       <section>
         <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-          <TrendingUp size={14} className="text-primary" /> Популярные запросы
+          <TrendingUp size={14} className="text-primary" /> {t('popular_queries')}
         </h3>
         <div className="flex flex-wrap gap-2">
           {POPULAR_QUERIES.map(q => (
             <button
               key={q}
               onClick={() => onPick(q)}
-              className="px-4 py-2 rounded-xl bg-card border border-border text-sm text-foreground hover:border-primary/40 hover:bg-secondary transition-colors"
+              className="px-4 py-2 rounded-xl bg-card border border-border text-sm text-foreground hover:border-primary/40 hover:bg-secondary transition-all cursor-pointer"
             >
               {q}
             </button>
@@ -146,7 +222,7 @@ function SearchSuggestions({ onPick }: { onPick: (q: string) => void }) {
 
       <section>
         <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-          <Sparkles size={14} className="text-accent" /> Жанры для исследования
+          <Sparkles size={14} className="text-accent" /> {t('genres_explore')}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {POPULAR_GENRES.map(g => (

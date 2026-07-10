@@ -39,6 +39,7 @@ class UserProfile(models.Model):
     display_name = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
     city = models.CharField(max_length=255, blank=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     language = models.CharField(max_length=10, choices=Language.choices, default=Language.RU)
     theme = models.CharField(max_length=20, choices=Theme.choices, default=Theme.SYSTEM)
     audio_quality = models.CharField(
@@ -61,6 +62,10 @@ class Track(models.Model):
         ENGLISH = "English", "Английский"
         OTHER = "Other", "Другой"
 
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Черновик"
+        PUBLISHED = "published", "Опубликован"
+
     # --- Основная информация ---
     title = models.CharField(max_length=255, verbose_name="Название сингла")
     artist = models.CharField(max_length=255, verbose_name="Имя артиста")
@@ -73,6 +78,13 @@ class Track(models.Model):
     )
     duration = models.PositiveIntegerField(help_text="Секунды", default=0, verbose_name="Длительность")
     plays = models.PositiveBigIntegerField(default=0, verbose_name="Прослушиваний")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        verbose_name="Статус",
+    )
+    published_at = models.DateTimeField(blank=True, null=True, verbose_name="Дата публикации")
 
     # --- Медиафайлы ---
     cover_image = models.ImageField(
@@ -124,10 +136,20 @@ class Album(models.Model):
     artist = models.CharField(max_length=255)
     cover = models.CharField(max_length=255, blank=True)
     year = models.PositiveIntegerField()
-    tracks = models.ManyToManyField(Track, related_name="albums", blank=True)
+    tracks = models.ManyToManyField(Track, through='AlbumTrack', related_name="albums", blank=True)
 
     def __str__(self) -> str:
         return self.title
+
+
+class AlbumTrack(models.Model):
+    album = models.ForeignKey(Album, on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["order"]
+        unique_together = ("album", "track")
 
 
 class Playlist(models.Model):
@@ -140,11 +162,32 @@ class Playlist(models.Model):
     description = models.TextField(blank=True)
     cover = models.CharField(max_length=255, blank=True)
     type = models.CharField(max_length=20, choices=PlaylistType.choices)
-    tracks = models.ManyToManyField(Track, related_name="playlists", blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="custom_playlists",
+        verbose_name="Создатель",
+    )
+    is_public = models.BooleanField(default=True, verbose_name="Публичный")
+    tracks = models.ManyToManyField(Track, through='PlaylistTrack', related_name="playlists", blank=True)
+
+
     creator = models.CharField(max_length=255, blank=True)
 
     def __str__(self) -> str:
         return self.name
+
+
+class PlaylistTrack(models.Model):
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["order"]
+        unique_together = ("playlist", "track")
 
 
 class Concert(models.Model):
@@ -155,6 +198,69 @@ class Concert(models.Model):
     city = models.CharField(max_length=255)
     ticketPrice = models.PositiveIntegerField()
     image = models.CharField(max_length=255, blank=True)
+    tickets_available = models.PositiveIntegerField(default=100)
+    tickets_sold = models.PositiveIntegerField(default=0)
 
     def __str__(self) -> str:
         return f"{self.artist} - {self.date}".strip()
+
+
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="likes")
+    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "track")
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="following")
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="followers_list")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "artist")
+
+
+class SavedPlaylist(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_playlists")
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name="saved_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "playlist")
+
+
+class RecentlyPlayed(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recent_plays")
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    played_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-played_at"]
+
+
+class PlayEvent(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="play_events")
+    played_at = models.DateTimeField(auto_now_add=True)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    title = models.CharField(max_length=255)
+    body = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+

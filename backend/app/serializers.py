@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Artist, Track, Album, Playlist, Concert
+from .models import Artist, Track, Album, Playlist, Concert, Notification
 
 
 class TrackSerializer(serializers.ModelSerializer):
@@ -23,6 +23,8 @@ class TrackSerializer(serializers.ModelSerializer):
             "ai_generated",
             "label_name",
             "audioUrl",
+            "status",
+            "published_at",
         ]
 
     def get_audioUrl(self, obj):
@@ -37,8 +39,7 @@ class TrackSerializer(serializers.ModelSerializer):
 
 
 class ArtistSerializer(serializers.ModelSerializer):
-    # Front expects nested `tracks: Track[]`
-    tracks = TrackSerializer(many=True, read_only=True)
+    tracks = serializers.SerializerMethodField()
 
     class Meta:
         model = Artist
@@ -54,10 +55,14 @@ class ArtistSerializer(serializers.ModelSerializer):
             "tracks",
         ]
 
+    def get_tracks(self, obj):
+        # Only return published tracks in public list
+        qs = obj.tracks.filter(status='published').order_by('-plays', 'id')
+        return TrackSerializer(qs, many=True, context=self.context).data
+
 
 class AlbumSerializer(serializers.ModelSerializer):
-    # Front expects `tracks: Track[]`
-    tracks = TrackSerializer(many=True, read_only=True)
+    tracks = serializers.SerializerMethodField()
 
     class Meta:
         model = Album
@@ -70,9 +75,14 @@ class AlbumSerializer(serializers.ModelSerializer):
             "tracks",
         ]
 
+    def get_tracks(self, obj):
+        # Retrieve tracks in their albumtrack order
+        qs = obj.tracks.all().order_by("albumtrack__order")
+        return TrackSerializer(qs, many=True, context=self.context).data
+
 
 class PlaylistSerializer(serializers.ModelSerializer):
-    tracks = TrackSerializer(many=True, read_only=True)
+    tracks = serializers.SerializerMethodField()
 
     class Meta:
         model = Playlist
@@ -82,9 +92,16 @@ class PlaylistSerializer(serializers.ModelSerializer):
             "description",
             "cover",
             "type",
+            "user",
+            "is_public",
             "tracks",
             "creator",
         ]
+
+    def get_tracks(self, obj):
+        # Retrieve tracks in their playlisttrack order
+        qs = obj.tracks.all().order_by("playlisttrack__order")
+        return TrackSerializer(qs, many=True, context=self.context).data
 
 
 class ConcertSerializer(serializers.ModelSerializer):
@@ -99,4 +116,19 @@ class ConcertSerializer(serializers.ModelSerializer):
             "city",
             "ticketPrice",
             "image",
+            "tickets_available",
+            "tickets_sold",
         ]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "title",
+            "body",
+            "is_read",
+            "created_at",
+        ]
+

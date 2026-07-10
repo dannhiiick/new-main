@@ -1,20 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { api, type Track } from './api';
 import { useLibrary } from './libraryStore';
-
-interface PlayerProps {
-  currentTrack?: Track;
-}
+import { usePlayback } from './PlaybackContext';
 
 function fmt(s: number) {
   if (!Number.isFinite(s) || s <= 0) return '0:00';
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 }
 
-export function Player({ currentTrack }: PlayerProps) {
+export function Player() {
+  const {
+    currentTrack,
+    playing,
+    queue,
+    currentIndex,
+    nextTrack,
+    prevTrack,
+    shuffle,
+    repeat,
+    setShuffle,
+    setRepeat,
+    setPlaying,
+    togglePlay,
+  } = usePlayback();
+
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(80);
   const [muted, setMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -42,6 +53,18 @@ export function Player({ currentTrack }: PlayerProps) {
 
   const audioSrc = getAudioSource();
 
+  // Sync audio element play/pause with context's playing state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !audioSrc) return;
+    if (playing) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [playing, audioSrc]);
+
+  // Load new track when currentTrack changes
   useEffect(() => {
     setCurrentTime(0);
     setDuration(currentTrack?.duration || 0);
@@ -49,6 +72,7 @@ export function Player({ currentTrack }: PlayerProps) {
     const audio = audioRef.current;
     audio.load();
     audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack, audioSrc]);
 
   useEffect(() => {
@@ -60,8 +84,7 @@ export function Player({ currentTrack }: PlayerProps) {
   const toggle = () => {
     const a = audioRef.current;
     if (!a || !hasAudio) return;
-    if (playing) { a.pause(); setPlaying(false); }
-    else { a.play().then(() => setPlaying(true)).catch(() => {}); }
+    togglePlay();
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -73,7 +96,26 @@ export function Player({ currentTrack }: PlayerProps) {
     setCurrentTime(t);
   };
 
+  const handleEnded = () => {
+    if (repeat === 'one') {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+    } else {
+      nextTrack();
+    }
+  };
+
+  const handleRepeatCycle = () => {
+    if (repeat === 'none') setRepeat('all');
+    else if (repeat === 'all') setRepeat('one');
+    else setRepeat('none');
+  };
+
   const coverLabel = currentTrack?.cover || (currentTrack ? currentTrack.title.slice(0, 2).toUpperCase() : '♫');
+  const queueInfo = queue.length > 1 ? `${currentIndex + 1} / ${queue.length}` : null;
 
   return (
     <div
@@ -87,7 +129,7 @@ export function Player({ currentTrack }: PlayerProps) {
         onTimeUpdate={e => setCurrentTime(e.currentTarget.currentTime)}
         onPause={() => setPlaying(false)}
         onPlay={() => setPlaying(true)}
-        onEnded={() => { setPlaying(false); setCurrentTime(0); }}
+        onEnded={handleEnded}
       />
 
       {/* Mobile top progress bar */}
@@ -106,7 +148,12 @@ export function Player({ currentTrack }: PlayerProps) {
           </div>
           <div className="min-w-0 flex-1 sm:flex-none">
             <p className="text-sm font-medium text-foreground truncate">{currentTrack?.title || 'Выберите трек'}</p>
-            <p className="text-xs text-muted-foreground truncate">{currentTrack?.artist || '—'}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground truncate">{currentTrack?.artist || '—'}</p>
+              {queueInfo && (
+                <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">{queueInfo}</span>
+              )}
+            </div>
           </div>
           <button
             onClick={() => currentTrack && toggleLike(currentTrack)}
@@ -118,7 +165,7 @@ export function Player({ currentTrack }: PlayerProps) {
 
         {/* Mobile compact controls */}
         <div className="flex sm:hidden items-center gap-2 ml-2 shrink-0">
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={prevTrack} className="text-muted-foreground hover:text-foreground transition-colors">
             <SkipBack size={16} />
           </button>
           <button
@@ -128,7 +175,7 @@ export function Player({ currentTrack }: PlayerProps) {
           >
             {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
           </button>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={nextTrack} className="text-muted-foreground hover:text-foreground transition-colors">
             <SkipForward size={16} />
           </button>
         </div>
@@ -136,10 +183,13 @@ export function Player({ currentTrack }: PlayerProps) {
         {/* Desktop center controls */}
         <div className="hidden sm:flex flex-col items-center gap-1.5 flex-1 max-w-[480px]">
           <div className="flex items-center gap-4">
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <button
+              onClick={() => setShuffle(!shuffle)}
+              className={`transition-colors ${shuffle ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
               <Shuffle size={15} />
             </button>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={prevTrack} className="text-muted-foreground hover:text-foreground transition-colors">
               <SkipBack size={18} />
             </button>
             <button
@@ -149,11 +199,14 @@ export function Player({ currentTrack }: PlayerProps) {
             >
               {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
             </button>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={nextTrack} className="text-muted-foreground hover:text-foreground transition-colors">
               <SkipForward size={18} />
             </button>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <Repeat size={15} />
+            <button
+              onClick={handleRepeatCycle}
+              className={`transition-colors ${repeat !== 'none' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {repeat === 'one' ? <Repeat1 size={15} /> : <Repeat size={15} />}
             </button>
           </div>
 
